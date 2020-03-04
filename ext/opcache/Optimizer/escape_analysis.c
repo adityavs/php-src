@@ -176,12 +176,12 @@ static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, in
 			case ZEND_NEW:
 			    /* objects with destructors should escape */
 				if (opline->op1_type == IS_CONST) {
-					zend_class_entry *ce = get_class_entry(script, Z_STR_P(CRT_CONSTANT_EX(op_array, opline, opline->op1, ssa->rt_constants)+1));
-					uint32_t forbidden_flags = ZEND_ACC_INHERITED
+					zend_class_entry *ce = get_class_entry(script, Z_STR_P(CRT_CONSTANT(opline->op1)+1));
+					uint32_t forbidden_flags =
 						/* These flags will always cause an exception */
-						| ZEND_ACC_IMPLICIT_ABSTRACT_CLASS | ZEND_ACC_EXPLICIT_ABSTRACT_CLASS
+						ZEND_ACC_IMPLICIT_ABSTRACT_CLASS | ZEND_ACC_EXPLICIT_ABSTRACT_CLASS
 						| ZEND_ACC_INTERFACE | ZEND_ACC_TRAIT;
-					if (ce && !ce->create_object && !ce->constructor &&
+					if (ce && !ce->parent && !ce->create_object && !ce->constructor &&
 					    !ce->destructor && !ce->__get && !ce->__set &&
 					    !(ce->ce_flags & forbidden_flags) &&
 						(ce->ce_flags & ZEND_ACC_CONSTANTS_UPDATED)) {
@@ -191,7 +191,7 @@ static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, in
 				break;
 			case ZEND_QM_ASSIGN:
 				if (opline->op1_type == IS_CONST
-				 && Z_TYPE_P(CRT_CONSTANT_EX(op_array, opline, opline->op1, ssa->rt_constants)) == IS_ARRAY) {
+				 && Z_TYPE_P(CRT_CONSTANT(opline->op1)) == IS_ARRAY) {
 					return 1;
 				}
 				if (opline->op1_type == IS_CV && (OP1_INFO() & MAY_BE_ARRAY)) {
@@ -208,7 +208,7 @@ static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, in
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
 				if (opline->op2_type == IS_CONST
-				 && Z_TYPE_P(CRT_CONSTANT_EX(op_array, opline, opline->op2, ssa->rt_constants)) == IS_ARRAY) {
+				 && Z_TYPE_P(CRT_CONSTANT(opline->op2)) == IS_ARRAY) {
 					return 1;
 				}
 				if (opline->op2_type == IS_CV && (OP2_INFO() & MAY_BE_ARRAY)) {
@@ -245,10 +245,9 @@ static int is_local_def(zend_op_array *op_array, zend_ssa *ssa, int def, int var
 			case ZEND_NEW:
 				/* objects with destructors should escape */
 				if (opline->op1_type == IS_CONST) {
-					zend_class_entry *ce = get_class_entry(script, Z_STR_P(CRT_CONSTANT_EX(op_array, opline, opline->op1, ssa->rt_constants)+1));
+					zend_class_entry *ce = get_class_entry(script, Z_STR_P(CRT_CONSTANT(opline->op1)+1));
 					if (ce && !ce->create_object && !ce->constructor &&
-					    !ce->destructor && !ce->__get && !ce->__set &&
-					    !(ce->ce_flags & ZEND_ACC_INHERITED)) {
+					    !ce->destructor && !ce->__get && !ce->__set && !ce->parent) {
 						return 1;
 					}
 				}
@@ -257,24 +256,11 @@ static int is_local_def(zend_op_array *op_array, zend_ssa *ssa, int def, int var
 	} else if (op->op1_def == var) {
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
-				return 1;
 			case ZEND_ASSIGN_DIM:
 			case ZEND_ASSIGN_OBJ:
 			case ZEND_ASSIGN_OBJ_REF:
-				return 1;
-			case ZEND_ASSIGN_ADD:
-			case ZEND_ASSIGN_SUB:
-			case ZEND_ASSIGN_MUL:
-			case ZEND_ASSIGN_DIV:
-			case ZEND_ASSIGN_MOD:
-			case ZEND_ASSIGN_SL:
-			case ZEND_ASSIGN_SR:
-			case ZEND_ASSIGN_CONCAT:
-			case ZEND_ASSIGN_BW_OR:
-			case ZEND_ASSIGN_BW_AND:
-			case ZEND_ASSIGN_BW_XOR:
-			case ZEND_ASSIGN_POW:
-				return (opline->extended_value != 0);
+			case ZEND_ASSIGN_DIM_OP:
+			case ZEND_ASSIGN_OBJ_OP:
 			case ZEND_PRE_INC_OBJ:
 			case ZEND_PRE_DEC_OBJ:
 			case ZEND_POST_INC_OBJ:
@@ -312,22 +298,11 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 			case ZEND_FETCH_DIM_IS:
 			case ZEND_FETCH_OBJ_IS:
 				break;
-			case ZEND_ASSIGN_ADD:
-			case ZEND_ASSIGN_SUB:
-			case ZEND_ASSIGN_MUL:
-			case ZEND_ASSIGN_DIV:
-			case ZEND_ASSIGN_MOD:
-			case ZEND_ASSIGN_SL:
-			case ZEND_ASSIGN_SR:
-			case ZEND_ASSIGN_CONCAT:
-			case ZEND_ASSIGN_BW_OR:
-			case ZEND_ASSIGN_BW_AND:
-			case ZEND_ASSIGN_BW_XOR:
-			case ZEND_ASSIGN_POW:
-				if (!opline->extended_value) {
-					return 1;
-				}
-				/* break missing intentionally */
+			case ZEND_ASSIGN_OP:
+				return 1;
+			case ZEND_ASSIGN_DIM_OP:
+			case ZEND_ASSIGN_OBJ_OP:
+			case ZEND_ASSIGN_STATIC_PROP_OP:
 			case ZEND_ASSIGN_DIM:
 			case ZEND_ASSIGN_OBJ:
 			case ZEND_ASSIGN_OBJ_REF:
@@ -362,7 +337,7 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 				if (opline->op1_type != IS_CV
 				 || (OP1_INFO() & MAY_BE_REF)
 				 || (op->op1_def >= 0 && ssa->vars[op->op1_def].alias)) {
-					/* asignment into escaping structure */
+					/* assignment into escaping structure */
 					return 1;
 				}
 				/* reference dependencies processed separately */
@@ -378,7 +353,7 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 				if (opline->op1_type != IS_CV
 				 || (OP1_INFO() & MAY_BE_REF)
 				 || (op->op1_def >= 0 && ssa->vars[op->op1_def].alias)) {
-					/* asignment into escaping variable */
+					/* assignment into escaping variable */
 					return 1;
 				}
 				if (opline->op2_type == IS_CV || opline->result_type != IS_UNUSED) {
@@ -437,7 +412,7 @@ int zend_ssa_escape_analysis(const zend_script *script, zend_op_array *op_array,
 	}
 
 
-	/* 1. Build EES (Equi-Esape Sets) */
+	/* 1. Build EES (Equi-Escape Sets) */
 	ees = do_alloca(sizeof(int) * ssa_vars_count, use_heap);
 	if (!ees) {
 		return FAILURE;

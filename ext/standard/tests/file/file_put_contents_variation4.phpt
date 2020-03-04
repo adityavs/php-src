@@ -28,14 +28,13 @@ set_include_path($newpath);
 runtest();
 
 teardown_include_path();
-restore_include_path();
 chdir("..");
 rmdir($thisTestDir);
 
 
 function runtest() {
    global $filename;
-   //correct php53 behaviour is to ingnore the FILE_USE_INCLUDE_PATH unless the file alread exists
+   //correct php53 behaviour is to ignore the FILE_USE_INCLUDE_PATH unless the file already exists
    // in the include path. In this case it doesn't so the file should be written in the current dir.
    file_put_contents($filename, "File in include path", FILE_USE_INCLUDE_PATH);
    $line = file_get_contents($filename);
@@ -44,8 +43,6 @@ function runtest() {
 }
 
 ?>
-===DONE===
 --EXPECT--
 File in include path
 File in include path
-===DONE===

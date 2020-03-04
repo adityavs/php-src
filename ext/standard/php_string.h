@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -54,9 +52,8 @@ PHP_FUNCTION(ucwords);
 PHP_FUNCTION(strtr);
 PHP_FUNCTION(strrev);
 PHP_FUNCTION(hebrev);
-PHP_FUNCTION(hebrevc);
-PHP_FUNCTION(user_sprintf);
-PHP_FUNCTION(user_printf);
+PHP_FUNCTION(sprintf);
+PHP_FUNCTION(printf);
 PHP_FUNCTION(vprintf);
 PHP_FUNCTION(vsprintf);
 PHP_FUNCTION(addcslashes);
@@ -91,12 +88,7 @@ PHP_FUNCTION(strpbrk);
 PHP_FUNCTION(substr_compare);
 PHP_FUNCTION(utf8_encode);
 PHP_FUNCTION(utf8_decode);
-#ifdef HAVE_STRCOLL
 PHP_FUNCTION(strcoll);
-#endif
-#if HAVE_STRFMON
-PHP_FUNCTION(money_format);
-#endif
 
 #if defined(ZTS)
 PHP_MINIT_FUNCTION(localeconv);
@@ -131,9 +123,9 @@ PHPAPI char *php_stristr(char *s, char *t, size_t s_len, size_t t_len);
 PHPAPI zend_string *php_str_to_str(const char *haystack, size_t length, const char *needle,
 		size_t needle_len, const char *str, size_t str_len);
 PHPAPI zend_string *php_trim(zend_string *str, char *what, size_t what_len, int mode);
-PHPAPI size_t php_strip_tags(char *rbuf, size_t len, uint8_t *state, const char *allow, size_t allow_len);
-PHPAPI size_t php_strip_tags_ex(char *rbuf, size_t len, uint8_t *stateptr, const char *allow, size_t allow_len, zend_bool allow_tag_spaces);
-PHPAPI void php_implode(const zend_string *delim, zval *arr, zval *return_value);
+PHPAPI size_t php_strip_tags(char *rbuf, size_t len, const char *allow, size_t allow_len);
+PHPAPI size_t php_strip_tags_ex(char *rbuf, size_t len, const char *allow, size_t allow_len, zend_bool allow_tag_spaces);
+PHPAPI void php_implode(const zend_string *delim, HashTable *arr, zval *return_value);
 PHPAPI void php_explode(const zend_string *delim, zend_string *str, zval *return_value, zend_long limit);
 
 PHPAPI size_t php_strspn(char *s1, char *s2, char *s1_end, char *s2_end);

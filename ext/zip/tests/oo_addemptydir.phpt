@@ -9,27 +9,33 @@ if(!extension_loaded('zip')) die('skip');
 
 $dirname = __DIR__ . '/';
 include $dirname . 'utils.inc';
-$file = $dirname . '__tmp_oo_addfile.zip';
+$file = $dirname . 'oo_addemptydir.zip';
 
 copy($dirname . 'test.zip', $file);
 
 $zip = new ZipArchive;
 if (!$zip->open($file)) {
-	exit('failed');
+    exit('failed');
 }
 
 $zip->addEmptyDir('emptydir');
 if ($zip->status == ZIPARCHIVE::ER_OK) {
-	dump_entries_name($zip);
-	$zip->close();
+    if (!verify_entries($zip, [
+        "bar",
+        "foobar/",
+        "foobar/baz",
+        "entry1.txt",
+        "emptydir/"
+    ])) {
+        echo "failed\n";
+    } else {
+        echo "OK";
+    }
+    $zip->close();
 } else {
-	echo "failed\n";
+    echo "failed3\n";
 }
 @unlink($file);
 ?>
 --EXPECT--
-0 bar
-1 foobar/
-2 foobar/baz
-3 entry1.txt
-4 emptydir/
+OK

@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -327,8 +325,8 @@ PHP_FUNCTION(mt_rand)
 	ZEND_PARSE_PARAMETERS_END();
 
 	if (UNEXPECTED(max < min)) {
-		php_error_docref(NULL, E_WARNING, "max(" ZEND_LONG_FMT ") is smaller than min(" ZEND_LONG_FMT ")", max, min);
-		RETURN_FALSE;
+		zend_value_error("max (" ZEND_LONG_FMT ") is smaller than min (" ZEND_LONG_FMT ")", max, min);
+		RETURN_THROWS();
 	}
 
 	RETURN_LONG(php_mt_rand_common(min, max));
@@ -339,9 +337,7 @@ PHP_FUNCTION(mt_rand)
    Returns the maximum value a random number from Mersenne Twister can have */
 PHP_FUNCTION(mt_getrandmax)
 {
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	/*
 	 * Melo: it could be 2^^32 but we only use 2^^31 to maintain

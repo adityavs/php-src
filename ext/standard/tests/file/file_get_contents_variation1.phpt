@@ -28,7 +28,6 @@ $newpath = create_include_path();
 set_include_path($newpath);
 runtest();
 teardown_include_path();
-restore_include_path();
 chdir("..");
 rmdir($thisTestDir);
 
@@ -44,8 +43,6 @@ function runtest() {
 }
 
 ?>
-===DONE===
 --EXPECT--
 *** Testing file_get_contents() : variation ***
 File in include path
-===DONE===

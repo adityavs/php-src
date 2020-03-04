@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -568,7 +566,7 @@ typedef struct buf_area buffy;
 	    INS_CHAR( ch, sp, bep, cc ) ;	\
 	    width-- ;				\
 	}					\
-	while ( width > len )
+	while ( (size_t)width > len )
 
 /*
  * Prefix the character ch to the string str
@@ -713,25 +711,6 @@ static int format_converter(register buffy * odp, const char *fmt, va_list ap) /
 				case 'L':
 					fmt++;
 					modifier = LM_LONG_DOUBLE;
-					break;
-				case 'I':
-					fmt++;
-#if SIZEOF_LONG_LONG
-					if (*fmt == '6' && *(fmt+1) == '4') {
-						fmt += 2;
-						modifier = LM_LONG_LONG;
-					} else
-#endif
-						if (*fmt == '3' && *(fmt+1) == '2') {
-							fmt += 2;
-							modifier = LM_LONG;
-						} else {
-#ifdef _WIN64
-							modifier = LM_LONG_LONG;
-#else
-							modifier = LM_LONG;
-#endif
-						}
 					break;
 				case 'l':
 					fmt++;
@@ -982,7 +961,6 @@ static int format_converter(register buffy * odp, const char *fmt, va_list ap) /
 
 
 				case 's':
-				case 'v':
 					s = va_arg(ap, char *);
 					if (s != NULL) {
 						s_len = strlen(s);
@@ -1188,7 +1166,7 @@ fmt_error:
 					s_len--;
 					min_width--;
 				}
-				PAD((size_t)min_width, s_len, pad_char);
+				PAD(min_width, s_len, pad_char);
 			}
 			/*
 			 * Print the string s.
@@ -1199,7 +1177,7 @@ fmt_error:
 			}
 
 			if (adjust_width && adjust == LEFT && (size_t)min_width > s_len)
-				PAD((size_t)min_width, s_len, pad_char);
+				PAD(min_width, s_len, pad_char);
 			if (free_zcopy) {
 				zval_ptr_dtor_str(&zcopy);
 			}

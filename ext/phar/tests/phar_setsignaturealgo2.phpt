@@ -3,10 +3,8 @@ Phar::setSupportedSignatures() with hash
 --SKIPIF--
 <?php
 if (!extension_loaded("phar")) die("skip");
-if (!extension_loaded("hash")) die("skip hash extension required");
 $arr = Phar::getSupportedSignatures();
 if (!in_array("OpenSSL", $arr)) die("skip openssl support required");
-if (!in_array('SHA-256', $arr)) die("skip hash extension loaded shared");
 ?>
 --INI--
 phar.require_hash=0
@@ -45,7 +43,6 @@ var_dump($p->getSignature());
 echo $e->getMessage();
 }
 ?>
-===DONE===
 --CLEAN--
 <?php
 unlink(__DIR__ . '/' . basename(__FILE__, '.clean.php') . '.phar');
@@ -87,4 +84,3 @@ array(2) {
   ["hash_type"]=>
   string(7) "OpenSSL"
 }
-===DONE===

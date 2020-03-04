@@ -10,13 +10,13 @@ if(substr(PHP_OS, 0, 3) != 'WIN' )
 ?>
 --FILE--
 <?php
-	ob_start();
-	phpinfo();
-	$s = ob_get_contents();
-	ob_end_clean();
-	preg_match('/curl\n\n(.+)\n\n/siU', $s, $m);
+    ob_start();
+    phpinfo();
+    $s = ob_get_contents();
+    ob_end_clean();
+    preg_match('/curl\n\n(.+)\n\n/siU', $s, $m);
 
-	echo $m[1], "\n";
+    echo $m[1], "\n";
 
 ?>
 DONE
@@ -43,7 +43,7 @@ TLS-SRP => No
 HTTP2 => Yes
 GSSAPI => No
 KERBEROS5 => Yes
-UNIX_SOCKETS => No
+UNIX_SOCKETS => %r(Yes|No)%r
 PSL => No
 HTTPS_PROXY => Yes
 MULTI_SSL => %s

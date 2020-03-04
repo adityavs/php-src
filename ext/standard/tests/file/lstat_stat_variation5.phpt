@@ -7,7 +7,6 @@ if (substr(PHP_OS, 0, 3) == 'WIN') {
     die('skip.. Not valid for Windows');
 }
 ?>
-?>
 --FILE--
 <?php
 /* Prototype: array lstat ( string $filename );
@@ -34,7 +33,7 @@ echo "*** Testing stat() for directory after using touch() on the directory ***\
 $old_stat = stat($dir_name);
 // clear the cache
 clearstatcache();
-sleep(2);
+sleep(1);
 var_dump( touch($dir_name) );
 $new_stat = stat($dir_name);
 

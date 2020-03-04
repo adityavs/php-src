@@ -26,7 +26,6 @@ $modes = array("r", "r+", "rt");
 foreach($modes as $mode) {
     test_gzopen($mode);
 }
-restore_include_path();
 
 // remove the directory structure
 chdir($baseDir);
@@ -111,7 +110,6 @@ function test_gzopen($mode) {
 }
 
 ?>
-===DONE===
 --EXPECTF--
 *** Testing gzopen() : usage variation ***
 
@@ -126,15 +124,15 @@ This is a file in script dir
 
 ** testing with mode=r+ **
 
-Warning: gzopen(): cannot open a zlib stream for reading and writing at the same time! in %s on line %d
+Warning: gzopen(): Cannot open a zlib stream for reading and writing at the same time! in %s on line %d
 
-Warning: gzopen(): cannot open a zlib stream for reading and writing at the same time! in %s on line %d
+Warning: gzopen(): Cannot open a zlib stream for reading and writing at the same time! in %s on line %d
 
-Warning: gzopen(): cannot open a zlib stream for reading and writing at the same time! in %s on line %d
+Warning: gzopen(): Cannot open a zlib stream for reading and writing at the same time! in %s on line %d
 
-Warning: gzopen(): cannot open a zlib stream for reading and writing at the same time! in %s on line %d
+Warning: gzopen(): Cannot open a zlib stream for reading and writing at the same time! in %s on line %d
 
-Warning: gzopen(): cannot open a zlib stream for reading and writing at the same time! in %s on line %d
+Warning: gzopen(): Cannot open a zlib stream for reading and writing at the same time! in %s on line %d
 
 ** testing with mode=rt **
 This is a file in dir2
@@ -142,4 +140,3 @@ This is a file in dir1
 This is a file in dir1
 This is a file in working dir
 This is a file in script dir
-===DONE===

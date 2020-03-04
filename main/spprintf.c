@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -314,25 +312,6 @@ static void xbuf_format_converter(void *xbuf, zend_bool is_char, const char *fmt
 					fmt++;
 					modifier = LM_LONG_DOUBLE;
 					break;
-				case 'I':
-					fmt++;
-#if SIZEOF_LONG_LONG
-					if (*fmt == '6' && *(fmt+1) == '4') {
-						fmt += 2;
-						modifier = LM_LONG_LONG;
-					} else
-#endif
-						if (*fmt == '3' && *(fmt+1) == '2') {
-							fmt += 2;
-							modifier = LM_LONG;
-						} else {
-#ifdef _WIN64
-							modifier = LM_LONG_LONG;
-#else
-							modifier = LM_LONG;
-#endif
-						}
-					break;
 				case 'l':
 					fmt++;
 #if SIZEOF_LONG_LONG
@@ -589,7 +568,6 @@ static void xbuf_format_converter(void *xbuf, zend_bool is_char, const char *fmt
 
 
 				case 's':
-				case 'v':
 					s = va_arg(ap, char *);
 					if (s != NULL) {
 						if (!adjust_precision) {

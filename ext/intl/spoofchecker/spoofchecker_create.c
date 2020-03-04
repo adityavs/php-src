@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
@@ -34,8 +32,8 @@ PHP_METHOD(Spoofchecker, __construct)
 	zend_error_handling error_handling;
 	SPOOFCHECKER_METHOD_INIT_VARS;
 
-	if (zend_parse_parameters_none_throw() == FAILURE) {
-		return;
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
 	}
 
 	zend_replace_error_handling(EH_THROW, IntlException_ce_ptr, &error_handling);

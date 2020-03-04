@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -499,7 +497,7 @@ static void generate_dispids(php_dispatchex *disp)
 
 			char namebuf[32];
 			if (keytype == HASH_KEY_IS_LONG) {
-				snprintf(namebuf, sizeof(namebuf), "%d", pid);
+				snprintf(namebuf, sizeof(namebuf), ZEND_ULONG_FMT, pid);
 				name = zend_string_init(namebuf, strlen(namebuf), 0);
 			} else {
 				zend_string_addref(name);

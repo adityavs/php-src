@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -120,18 +118,16 @@ static zend_string *php_gethostbyaddr(char *ip);
 static zend_string *php_gethostbyname(char *name);
 
 #ifdef HAVE_GETHOSTNAME
-/* {{{ proto string gethostname()
+/* {{{ proto string|false gethostname()
    Get the host name of the current machine */
 PHP_FUNCTION(gethostname)
 {
 	char buf[HOST_NAME_MAX + 1];
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if (gethostname(buf, sizeof(buf))) {
-		php_error_docref(NULL, E_WARNING, "unable to fetch host [%d]: %s", errno, strerror(errno));
+		php_error_docref(NULL, E_WARNING, "Unable to fetch host [%d]: %s", errno, strerror(errno));
 		RETURN_FALSE;
 	}
 
@@ -144,7 +140,7 @@ PHP_FUNCTION(gethostname)
  we can have a dns.c, dns_unix.c and dns_win32.c instead of a messy dns.c full of #ifdef
 */
 
-/* {{{ proto string gethostbyaddr(string ip_address)
+/* {{{ proto string|false gethostbyaddr(string ip_address)
    Get the Internet host name corresponding to a given IP address */
 PHP_FUNCTION(gethostbyaddr)
 {
@@ -227,7 +223,7 @@ PHP_FUNCTION(gethostbyname)
 }
 /* }}} */
 
-/* {{{ proto array gethostbynamel(string hostname)
+/* {{{ proto array|false gethostbynamel(string hostname)
    Return a list of IP addresses that a given hostname resolves to. */
 PHP_FUNCTION(gethostbynamel)
 {
@@ -248,14 +244,21 @@ PHP_FUNCTION(gethostbynamel)
 	}
 
 	hp = php_network_gethostbyname(hostname);
-	if (hp == NULL || hp->h_addr_list == NULL) {
+	if (!hp) {
 		RETURN_FALSE;
 	}
 
 	array_init(return_value);
 
-	for (i = 0 ; hp->h_addr_list[i] != 0 ; i++) {
-		in = *(struct in_addr *) hp->h_addr_list[i];
+	for (i = 0;; i++) {
+		/* On macos h_addr_list entries may be misaligned. */
+		struct in_addr *h_addr_entry; /* Don't call this h_addr, it's a macro! */
+		memcpy(&h_addr_entry, &hp->h_addr_list[i], sizeof(struct in_addr *));
+		if (!h_addr_entry) {
+			return;
+		}
+
+		in = *h_addr_entry;
 		add_next_index_string(return_value, inet_ntoa(in));
 	}
 }
@@ -265,16 +268,22 @@ PHP_FUNCTION(gethostbynamel)
 static zend_string *php_gethostbyname(char *name)
 {
 	struct hostent *hp;
+	struct in_addr *h_addr_0; /* Don't call this h_addr, it's a macro! */
 	struct in_addr in;
 	char *address;
 
 	hp = php_network_gethostbyname(name);
-
-	if (!hp || !*(hp->h_addr_list)) {
+	if (!hp) {
 		return zend_string_init(name, strlen(name), 0);
 	}
 
-	memcpy(&in.s_addr, *(hp->h_addr_list), sizeof(in.s_addr));
+	/* On macos h_addr_list entries may be misaligned. */
+	memcpy(&h_addr_0, &hp->h_addr_list[0], sizeof(struct in_addr *));
+	if (!h_addr_0) {
+		return zend_string_init(name, strlen(name), 0);
+	}
+
+	memcpy(&in.s_addr, h_addr_0, sizeof(in.s_addr));
 
 	address = inet_ntoa(in);
 	return zend_string_init(address, strlen(address), 0);
@@ -372,8 +381,8 @@ PHP_FUNCTION(dns_check_record)
 	ZEND_PARSE_PARAMETERS_END();
 
 	if (hostname_len == 0) {
-		php_error_docref(NULL, E_WARNING, "Host cannot be empty");
-		RETURN_FALSE;
+		zend_value_error("Host cannot be empty");
+		RETURN_THROWS();
 	}
 
 	if (rectype) {
@@ -824,13 +833,13 @@ PHP_FUNCTION(dns_get_record)
 	if (authns) {
 		authns = zend_try_array_init(authns);
 		if (!authns) {
-			return;
+			RETURN_THROWS();
 		}
 	}
 	if (addtl) {
 		addtl = zend_try_array_init(addtl);
 		if (!addtl) {
-			return;
+			RETURN_THROWS();
 		}
 	}
 
@@ -855,7 +864,7 @@ PHP_FUNCTION(dns_get_record)
 	 *   store_results is used to skip storing the results retrieved in step
 	 *   NUMTYPES+1 when results were already fetched.
 	 * - In case of PHP_DNS_ANY we use the directly fetch DNS_T_ANY. (step NUMTYPES+1 )
-	 * - In case of raw mode, we query only the requestd type instead of looping type by type
+	 * - In case of raw mode, we query only the requested type instead of looping type by type
 	 *   before going with the additional info stuff.
 	 */
 
@@ -1060,13 +1069,13 @@ PHP_FUNCTION(dns_get_mx)
 
 	mx_list = zend_try_array_init(mx_list);
 	if (!mx_list) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (weight_list) {
 		weight_list = zend_try_array_init(weight_list);
 		if (!weight_list) {
-			return;
+			RETURN_THROWS();
 		}
 	}
 

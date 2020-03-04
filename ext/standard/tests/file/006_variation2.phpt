@@ -5,17 +5,7 @@ Test fileperms() & chmod() functions: usage variation - misc. perms
 if (substr(PHP_OS, 0, 3) == 'WIN') {
     die('skip Not on Windows');
 }
-// Skip if being run by root
-$filename = __DIR__."/006_root_check.tmp";
-$fp = fopen($filename, 'w');
-fclose($fp);
-if(fileowner($filename) == 0) {
-        unlink ($filename);
-        die('skip cannot be run as root');
-}
-
-unlink($filename);
-
+require __DIR__ . '/../skipif_root.inc';
 ?>
 --FILE--
 <?php
@@ -96,7 +86,7 @@ chmod(__DIR__."/006_variation2", 0777);
 unlink(__DIR__."/006_variation2.tmp");
 rmdir(__DIR__."/006_variation2");
 ?>
---EXPECTF--
+--EXPECT--
 *** Testing fileperms() & chmod() : usage variations ***
 
 *** Testing fileperms(), chmod() with miscellaneous permissions ***
@@ -156,15 +146,15 @@ bool(true)
 bool(true)
 43567
 -- Iteration 12 --
-chmod() expects parameter 2 to be int, string given
-chmod() expects parameter 2 to be int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
 -- Iteration 13 --
-chmod() expects parameter 2 to be int, string given
-chmod() expects parameter 2 to be int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
 -- Iteration 14 --
-chmod() expects parameter 2 to be int, string given
-chmod() expects parameter 2 to be int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
 -- Iteration 15 --
-chmod() expects parameter 2 to be int, string given
-chmod() expects parameter 2 to be int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
+chmod(): Argument #2 ($mode) must be of type int, string given
 *** Done ***

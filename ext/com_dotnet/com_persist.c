@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -31,6 +29,7 @@
 #include "php_com_dotnet.h"
 #include "php_com_dotnet_internal.h"
 #include "Zend/zend_exceptions.h"
+#include "com_persist_arginfo.h"
 
 /* {{{ expose php_stream as a COM IStream */
 
@@ -118,13 +117,13 @@ static HRESULT STDMETHODCALLTYPE stm_read(IStream *This, void *pv, ULONG cb, ULO
 
 static HRESULT STDMETHODCALLTYPE stm_write(IStream *This, void const *pv, ULONG cb, ULONG *pcbWritten)
 {
-	ULONG nwrote;
+	ssize_t nwrote;
 	FETCH_STM();
 
-	nwrote = (ULONG)php_stream_write(stm->stream, pv, cb);
+	nwrote = php_stream_write(stm->stream, pv, cb);
 
 	if (pcbWritten) {
-		*pcbWritten = nwrote > 0 ? nwrote : 0;
+		*pcbWritten = nwrote > 0 ? (ULONG)nwrote : 0;
 	}
 	if (nwrote > 0) {
 		return S_OK;
@@ -248,13 +247,6 @@ static struct IStreamVtbl php_istream_vtbl = {
 
 static void istream_destructor(php_istream *stm)
 {
-	if (stm->res) {
-		zend_resource *res = stm->res;
-		stm->res = NULL;
-		zend_list_delete(res);
-		return;
-	}
-
 	if (stm->refcount > 0) {
 		CoDisconnectObject((IUnknown*)stm, 0);
 	}
@@ -268,7 +260,6 @@ static void istream_destructor(php_istream *stm)
 PHP_COM_DOTNET_API IStream *php_com_wrapper_export_stream(php_stream *stream)
 {
 	php_istream *stm = (php_istream*)CoTaskMemAlloc(sizeof(*stm));
-	zval *tmp;
 
 	if (stm == NULL)
 		return NULL;
@@ -280,8 +271,7 @@ PHP_COM_DOTNET_API IStream *php_com_wrapper_export_stream(php_stream *stream)
 	stm->stream = stream;
 
 	GC_ADDREF(stream->res);
-	tmp = zend_list_insert(stm, le_istream);
-	stm->res = Z_RES_P(tmp);
+	stm->res = zend_register_resource(stm, le_istream);
 
 	return (IStream*)stm;
 }
@@ -291,7 +281,7 @@ PHP_COM_DOTNET_API IStream *php_com_wrapper_export_stream(php_stream *stream)
 
 #define CPH_FETCH()				php_com_persist_helper *helper = (php_com_persist_helper*)Z_OBJ_P(getThis());
 
-#define CPH_NO_OBJ()			if (helper->unk == NULL) { php_com_throw_exception(E_INVALIDARG, "No COM object is associated with this helper instance"); return; }
+#define CPH_NO_OBJ()			if (helper->unk == NULL) { php_com_throw_exception(E_INVALIDARG, "No COM object is associated with this helper instance"); RETURN_THROWS(); }
 
 typedef struct {
 	zend_object			std;
@@ -338,6 +328,10 @@ CPH_METHOD(GetCurFileName)
 	OLECHAR *olename = NULL;
 	CPH_FETCH();
 
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	CPH_NO_OBJ();
 
 	res = get_persist_file(helper);
@@ -376,16 +370,15 @@ CPH_METHOD(SaveToFile)
 	OLECHAR *olefilename = NULL;
 	CPH_FETCH();
 
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "p!|b",
+				&filename, &filename_len, &remember)) {
+		RETURN_THROWS();
+	}
+
 	CPH_NO_OBJ();
 
 	res = get_persist_file(helper);
 	if (helper->ipf) {
-		if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "p!|b",
-					&filename, &filename_len, &remember)) {
-			php_com_throw_exception(E_INVALIDARG, "Invalid arguments");
-			return;
-		}
-
 		if (filename) {
 			fullpath = expand_filepath(filename, NULL);
 			if (!fullpath) {
@@ -397,7 +390,7 @@ CPH_METHOD(SaveToFile)
 				RETURN_FALSE;
 			}
 
-			olefilename = php_com_string_to_olestring(filename, strlen(fullpath), helper->codepage);
+			olefilename = php_com_string_to_olestring(fullpath, strlen(fullpath), helper->codepage);
 			efree(fullpath);
 		}
 		res = IPersistFile_Save(helper->ipf, olefilename, remember);
@@ -439,17 +432,15 @@ CPH_METHOD(LoadFromFile)
 	OLECHAR *olefilename;
 	CPH_FETCH();
 
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "p|l",
+				&filename, &filename_len, &flags)) {
+		RETURN_THROWS();
+	}
+
 	CPH_NO_OBJ();
 
 	res = get_persist_file(helper);
 	if (helper->ipf) {
-
-		if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "p|l",
-					&filename, &filename_len, &flags)) {
-			php_com_throw_exception(E_INVALIDARG, "Invalid arguments");
-			return;
-		}
-
 		if (!(fullpath = expand_filepath(filename, NULL))) {
 			RETURN_FALSE;
 		}
@@ -483,6 +474,10 @@ CPH_METHOD(GetMaxStreamSize)
 	ULARGE_INTEGER size;
 	CPH_FETCH();
 
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	CPH_NO_OBJ();
 
 	res = get_persist_stream_init(helper);
@@ -494,7 +489,7 @@ CPH_METHOD(GetMaxStreamSize)
 			res = IPersistStream_GetSizeMax(helper->ips, &size);
 		} else {
 			php_com_throw_exception(res, NULL);
-			return;
+			RETURN_THROWS();
 		}
 	}
 
@@ -513,6 +508,10 @@ CPH_METHOD(InitNew)
 {
 	HRESULT res;
 	CPH_FETCH();
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
 
 	CPH_NO_OBJ();
 
@@ -542,21 +541,20 @@ CPH_METHOD(LoadFromStream)
 	CPH_FETCH();
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zstm)) {
-		php_com_throw_exception(E_INVALIDARG, "invalid arguments");
-		return;
+		RETURN_THROWS();
 	}
 
 	php_stream_from_zval_no_verify(stream, zstm);
 
 	if (stream == NULL) {
 		php_com_throw_exception(E_INVALIDARG, "expected a stream");
-		return;
+		RETURN_THROWS();
 	}
 
 	stm = php_com_wrapper_export_stream(stream);
 	if (stm == NULL) {
 		php_com_throw_exception(E_UNEXPECTED, "failed to wrap stream");
-		return;
+		RETURN_THROWS();
 	}
 
 	res = S_OK;
@@ -586,7 +584,7 @@ CPH_METHOD(LoadFromStream)
 
 	if (FAILED(res)) {
 		php_com_throw_exception(res, NULL);
-		RETURN_NULL();
+		RETURN_THROWS();
 	}
 }
 /* }}} */
@@ -604,21 +602,20 @@ CPH_METHOD(SaveToStream)
 	CPH_NO_OBJ();
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zstm)) {
-		php_com_throw_exception(E_INVALIDARG, "invalid arguments");
-		return;
+		RETURN_THROWS();
 	}
 
 	php_stream_from_zval_no_verify(stream, zstm);
 
 	if (stream == NULL) {
 		php_com_throw_exception(E_INVALIDARG, "expected a stream");
-		return;
+		RETURN_THROWS();
 	}
 
 	stm = php_com_wrapper_export_stream(stream);
 	if (stm == NULL) {
 		php_com_throw_exception(E_UNEXPECTED, "failed to wrap stream");
-		return;
+		RETURN_THROWS();
 	}
 
 	res = get_persist_stream_init(helper);
@@ -635,7 +632,7 @@ CPH_METHOD(SaveToStream)
 
 	if (FAILED(res)) {
 		php_com_throw_exception(res, NULL);
-		return;
+		RETURN_THROWS();
 	}
 
 	RETURN_TRUE;
@@ -652,8 +649,7 @@ CPH_METHOD(__construct)
 
 	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS(), "|O!",
 				&zobj, php_com_variant_class_entry)) {
-		php_com_throw_exception(E_INVALIDARG, "invalid arguments");
-		return;
+		RETURN_THROWS();
 	}
 
 	if (!zobj) {
@@ -664,7 +660,7 @@ CPH_METHOD(__construct)
 
 	if (V_VT(&obj->v) != VT_DISPATCH || V_DISPATCH(&obj->v) == NULL) {
 		php_com_throw_exception(E_INVALIDARG, "parameter must represent an IDispatch COM object");
-		return;
+		RETURN_THROWS();
 	}
 
 	/* it is always safe to cast an interface to IUnknown */
@@ -678,14 +674,14 @@ CPH_METHOD(__construct)
 
 
 static const zend_function_entry com_persist_helper_methods[] = {
-	CPH_ME(__construct, NULL)
-	CPH_ME(GetCurFileName, NULL)
-	CPH_ME(SaveToFile, NULL)
-	CPH_ME(LoadFromFile, NULL)
-	CPH_ME(GetMaxStreamSize, NULL)
-	CPH_ME(InitNew, NULL)
-	CPH_ME(LoadFromStream, NULL)
-	CPH_ME(SaveToStream, NULL)
+	CPH_ME(__construct, arginfo_class_COMPersistHelper___construct)
+	CPH_ME(GetCurFileName, arginfo_class_COMPersistHelper_GetCurFileName)
+	CPH_ME(SaveToFile, arginfo_class_COMPersistHelper_SaveToFile)
+	CPH_ME(LoadFromFile, arginfo_class_COMPersistHelper_LoadFromFile)
+	CPH_ME(GetMaxStreamSize, arginfo_class_COMPersistHelper_GetMaxStreamSize)
+	CPH_ME(InitNew, arginfo_class_COMPersistHelper_InitNew)
+	CPH_ME(LoadFromStream, arginfo_class_COMPersistHelper_LoadFromStream)
+	CPH_ME(SaveToStream, arginfo_class_COMPersistHelper_SaveToStream)
 	PHP_FE_END
 };
 

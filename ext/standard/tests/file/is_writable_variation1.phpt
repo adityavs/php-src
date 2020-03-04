@@ -2,19 +2,7 @@
 Test is_writable() and its alias is_writeable() function: usage variations - diff. path notations
 --SKIPIF--
 <?php
-if (substr(PHP_OS, 0, 3) != 'WIN') {
-
-  // Skip if being run by root (files are always readable, writeable and executable)
-  $filename = __DIR__."/is_writable_root_check.tmp";
-  $fp = fopen($filename, 'w');
-  fclose($fp);
-  if(fileowner($filename) == 0) {
-        unlink ($filename);
-        die('skip cannot be run as root');
-  }
-
-  unlink($filename);
-}
+require __DIR__ . '/../skipif_root.inc';
 ?>
 --FILE--
 <?php
@@ -104,14 +92,14 @@ bool(false)
 bool(false)
 bool(false)
 -- Iteration 7 --
-is_writable() expects parameter 1 to be a valid path, string given
-is_writeable() expects parameter 1 to be a valid path, string given
+is_writable(): Argument #1 ($filename) must be a valid path, string given
+is_writeable(): Argument #1 ($filename) must be a valid path, string given
 -- Iteration 8 --
-is_writable() expects parameter 1 to be a valid path, string given
-is_writeable() expects parameter 1 to be a valid path, string given
+is_writable(): Argument #1 ($filename) must be a valid path, string given
+is_writeable(): Argument #1 ($filename) must be a valid path, string given
 -- Iteration 9 --
-is_writable() expects parameter 1 to be a valid path, string given
-is_writeable() expects parameter 1 to be a valid path, string given
+is_writable(): Argument #1 ($filename) must be a valid path, string given
+is_writeable(): Argument #1 ($filename) must be a valid path, string given
 -- Iteration 10 --
 bool(true)
 bool(true)

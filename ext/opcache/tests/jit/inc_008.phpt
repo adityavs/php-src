@@ -8,12 +8,12 @@ opcache.jit_buffer_size=1M
 opcache.protect_memory=1
 ;opcache.jit_debug=257
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
-function foo() {	
-	$x = 1;	
-	return ++$x; // reg -> reg, reg
+function foo() {
+    $x = 1;
+    return ++$x; // reg -> reg, reg
 }
 var_dump(foo());
 --EXPECT--

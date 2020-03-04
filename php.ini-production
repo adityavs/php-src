@@ -99,12 +99,12 @@
 ;   Production Value: Off
 
 ; display_startup_errors
-;   Default Value: Off
+;   Default Value: On
 ;   Development Value: On
 ;   Production Value: Off
 
 ; error_reporting
-;   Default Value: E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
+;   Default Value: E_ALL
 ;   Development Value: E_ALL
 ;   Production Value: E_ALL & ~E_DEPRECATED & ~E_STRICT
 
@@ -284,6 +284,13 @@ implicit_flush = Off
 ; callback-function.
 unserialize_callback_func =
 
+; The unserialize_max_depth specifies the default depth limit for unserialized
+; structures. Setting the depth limit too high may result in stack overflows
+; during unserialization. The unserialize_max_depth ini setting can be
+; overridden by the max_depth option on individual unserialize() calls.
+; A value of 0 disables the depth limit.
+;unserialize_max_depth = 4096
+
 ; When floats & doubles are serialized, store serialize_precision significant
 ; digits after the floating point. The default value ensures that when floats
 ; are decoded with unserialize, the data will remain the same.
@@ -299,12 +306,12 @@ serialize_precision = -1
 ; http://php.net/open-basedir
 ;open_basedir =
 
-; This directive allows you to disable certain functions for security reasons.
+; This directive allows you to disable certain functions.
 ; It receives a comma-delimited list of function names.
 ; http://php.net/disable-functions
 disable_functions =
 
-; This directive allows you to disable certain classes for security reasons.
+; This directive allows you to disable certain classes.
 ; It receives a comma-delimited list of class names.
 ; http://php.net/disable-classes
 disable_classes =
@@ -354,6 +361,12 @@ zend.enable_gc = On
 ; Default: ""
 ;zend.script_encoding =
 
+; Allows to include or exclude arguments from stack traces generated for exceptions
+; Default: Off
+; In production, it is recommended to turn this setting on to prohibit the output 
+; of sensitive information in stack traces
+zend.exception_ignore_args = On
+
 ;;;;;;;;;;;;;;;;;
 ; Miscellaneous ;
 ;;;;;;;;;;;;;;;;;
@@ -391,7 +404,7 @@ max_input_time = 60
 ; How many GET/POST/COOKIE input variables may be accepted
 ;max_input_vars = 1000
 
-; Maximum amount of memory a script may consume (128MB)
+; Maximum amount of memory a script may consume
 ; http://php.net/memory-limit
 memory_limit = 128M
 
@@ -445,7 +458,7 @@ memory_limit = 128M
 ;   E_ALL & ~E_NOTICE  (Show all errors, except for notices)
 ;   E_ALL & ~E_NOTICE & ~E_STRICT  (Show all errors, except for notices and coding standards warnings.)
 ;   E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_ERROR|E_CORE_ERROR  (Show only errors)
-; Default Value: E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
+; Default Value: E_ALL
 ; Development Value: E_ALL
 ; Production Value: E_ALL & ~E_DEPRECATED & ~E_STRICT
 ; http://php.net/error-reporting
@@ -469,11 +482,9 @@ error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
 display_errors = Off
 
 ; The display of errors which occur during PHP's startup sequence are handled
-; separately from display_errors. PHP's default behavior is to suppress those
-; errors from clients. Turning the display of startup errors on can be useful in
-; debugging configuration problems. We strongly recommend you
-; set this to 'off' for production servers.
-; Default Value: Off
+; separately from display_errors. We strongly recommend you set this to 'off'
+; for production servers to avoid leaking configuration details.
+; Default Value: On
 ; Development Value: On
 ; Production Value: Off
 ; http://php.net/display-startup-errors
@@ -580,6 +591,7 @@ report_memleaks = On
 ;   ascii (all printable ASCII characters and NL)
 ;   no-ctrl (all characters except control characters)
 ;   all (all characters)
+;   raw (like "all", but messages are not split at newlines)
 ; http://php.net/syslog.filter
 ;syslog.filter = ascii
 
@@ -888,13 +900,14 @@ default_socket_timeout = 60
 ;
 ;extension=bz2
 ;extension=curl
+;extension=ffi
+;extension=ftp
 ;extension=fileinfo
 ;extension=gd2
 ;extension=gettext
 ;extension=gmp
 ;extension=intl
 ;extension=imap
-;extension=interbase
 ;extension=ldap
 ;extension=mbstring
 ;extension=exif      ; Must be after mbstring as it depends on it
@@ -923,6 +936,8 @@ default_socket_timeout = 60
 ;extension=xmlrpc
 ;extension=xsl
 
+;zend_extension=opcache
+
 ;;;;;;;;;;;;;;;;;;;
 ; Module Settings ;
 ;;;;;;;;;;;;;;;;;;;
@@ -943,10 +958,10 @@ cli_server.color = On
 ;date.default_longitude = 35.2333
 
 ; http://php.net/date.sunrise-zenith
-;date.sunrise_zenith = 90.583333
+;date.sunrise_zenith = 90.833333
 
 ; http://php.net/date.sunset-zenith
-;date.sunset_zenith = 90.583333
+;date.sunset_zenith = 90.833333
 
 [filter]
 ; http://php.net/filter.default
@@ -1106,37 +1121,6 @@ odbc.defaultlrl = 4096
 ; of odbc.defaultlrl and odbc.defaultbinmode
 ; http://php.net/odbc.defaultbinmode
 odbc.defaultbinmode = 1
-
-[Interbase]
-; Allow or prevent persistent links.
-ibase.allow_persistent = 1
-
-; Maximum number of persistent links.  -1 means no limit.
-ibase.max_persistent = -1
-
-; Maximum number of links (persistent + non-persistent).  -1 means no limit.
-ibase.max_links = -1
-
-; Default database name for ibase_connect().
-;ibase.default_db =
-
-; Default username for ibase_connect().
-;ibase.default_user =
-
-; Default password for ibase_connect().
-;ibase.default_password =
-
-; Default charset for ibase_connect().
-;ibase.default_charset =
-
-; Default timestamp format.
-ibase.timestampformat = "%Y-%m-%d %H:%M:%S"
-
-; Default date format.
-ibase.dateformat = "%Y-%m-%d"
-
-; Default time format.
-ibase.timeformat = "%H:%M:%S"
 
 [MySQLi]
 
@@ -1402,12 +1386,9 @@ session.cookie_samesite =
 ; http://php.net/session.serialize-handler
 session.serialize_handler = php
 
-; Defines the probability that the 'garbage collection' process is started
-; on every session initialization. The probability is calculated by using
-; gc_probability/gc_divisor. Where session.gc_probability is the numerator
-; and gc_divisor is the denominator in the equation. Setting this value to 1
-; when the session.gc_divisor value is 100 will give you approximately a 1% chance
-; the gc will run on any given request.
+; Defines the probability that the 'garbage collection' process is started on every
+; session initialization. The probability is calculated by using gc_probability/gc_divisor,
+; e.g. 1/100 means there is a 1% chance that the GC process starts on each request.
 ; Default Value: 1
 ; Development Value: 1
 ; Production Value: 1
@@ -1415,13 +1396,9 @@ session.serialize_handler = php
 session.gc_probability = 1
 
 ; Defines the probability that the 'garbage collection' process is started on every
-; session initialization. The probability is calculated by using the following equation:
-; gc_probability/gc_divisor. Where session.gc_probability is the numerator and
-; session.gc_divisor is the denominator in the equation. Setting this value to 100
-; when the session.gc_probability value is 1 will give you approximately a 1% chance
-; the gc will run on any given request. Increasing this value to 1000 will give you
-; a 0.1% chance the gc will run on any given request. For high volume production servers,
-; this is a more efficient approach.
+; session initialization. The probability is calculated by using gc_probability/gc_divisor,
+; e.g. 1/100 means there is a 1% chance that the GC process starts on each request.
+; For high volume production servers, using a value of 1000 is a more efficient approach.
 ; Default Value: 100
 ; Development Value: 1000
 ; Production Value: 1000
@@ -1683,6 +1660,11 @@ zend.assertions = -1
 ; Default: 100000
 ;mbstring.regex_stack_limit=100000
 
+; This directive specifies maximum retry count for mbstring regular expressions. It is similar
+; to the pcre.backtrack_limit for PCRE.
+; Default: 1000000
+;mbstring.regex_retry_limit=1000000
+
 [gd]
 ; Tell the jpeg decode to ignore warnings and try to create
 ; a gd image. The warning will then be displayed as notices
@@ -1850,6 +1832,10 @@ ldap.max_links = -1
 ; errors.
 ;opcache.mmap_base=
 
+; Facilitates multiple OPcache instances per user (for Windows only). All PHP
+; processes with the same cache ID and user share an OPcache instance.
+;opcache.cache_id=
+
 ; Enables and sets the second level cache directory.
 ; It should improve performance when SHM memory is full, at server restart or
 ; SHM reset. The default "" disables file based caching.
@@ -1885,6 +1871,11 @@ ldap.max_links = -1
 ; http://php.net/opcache.preload
 ;opcache.preload=
 
+; Preloading code as root is not allowed for security reasons. This directive
+; facilitates to let the preloading to be run as another user.
+; http://php.net/opcache.preload_user
+;opcache.preload_user=
+
 ; Prevents caching files that are less than this number of seconds old. It
 ; protects from caching of incompletely updated files. In case all file updates
 ; on your site are atomic, you may increase performance by setting it to "0".
@@ -1917,8 +1908,11 @@ ldap.max_links = -1
 ;openssl.capath=
 
 [ffi]
-; FFI API restriction. Possibe values:
+; FFI API restriction. Possible values:
 ; "preload" - enabled in CLI scripts and preloaded files (default)
 ; "false"   - always disabled
 ; "true"    - always enabled
 ;ffi.enable=preload
+
+; List of headers files to preload, wildcard patterns allowed.
+;ffi.preload=

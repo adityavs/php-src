@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -125,7 +123,7 @@ PHPAPI int php_setcookie(zend_string *name, zend_string *value, time_t expires, 
 		smart_str_append(&buf, name);
 		smart_str_appendc(&buf, '=');
 		if (url_encode) {
-			zend_string *encoded_value = php_url_encode(ZSTR_VAL(value), ZSTR_LEN(value));
+			zend_string *encoded_value = php_raw_url_encode(ZSTR_VAL(value), ZSTR_LEN(value));
 			smart_str_append(&buf, encoded_value);
 			zend_string_release_ex(encoded_value, 0);
 		} else {
@@ -149,7 +147,7 @@ PHPAPI int php_setcookie(zend_string *name, zend_string *value, time_t expires, 
 			smart_str_append(&buf, dt);
 			zend_string_free(dt);
 
-			diff = difftime(expires, time(NULL));
+			diff = difftime(expires, php_time());
 			if (diff < 0) {
 				diff = 0;
 			}
@@ -258,10 +256,12 @@ PHP_FUNCTION(setcookie)
 		}
 	}
 
-	if (php_setcookie(name, value, expires, path, domain, secure, httponly, samesite, 1) == SUCCESS) {
-		RETVAL_TRUE;
-	} else {
-		RETVAL_FALSE;
+	if (!EG(exception)) {
+		if (php_setcookie(name, value, expires, path, domain, secure, httponly, samesite, 1) == SUCCESS) {
+			RETVAL_TRUE;
+		} else {
+			RETVAL_FALSE;
+		}
 	}
 
 	if (expires_or_options && Z_TYPE_P(expires_or_options) == IS_ARRAY) {
@@ -311,10 +311,12 @@ PHP_FUNCTION(setrawcookie)
 		}
 	}
 
-	if (php_setcookie(name, value, expires, path, domain, secure, httponly, samesite, 0) == SUCCESS) {
-		RETVAL_TRUE;
-	} else {
-		RETVAL_FALSE;
+	if (!EG(exception)) {
+		if (php_setcookie(name, value, expires, path, domain, secure, httponly, samesite, 0) == SUCCESS) {
+			RETVAL_TRUE;
+		} else {
+			RETVAL_FALSE;
+		}
 	}
 
 	if (expires_or_options && Z_TYPE_P(expires_or_options) == IS_ARRAY) {
@@ -386,9 +388,7 @@ static void php_head_apply_header_list_to_hash(void *data, void *arg)
    Return list of headers to be sent / already sent */
 PHP_FUNCTION(headers_list)
 {
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	array_init(return_value);
 	zend_llist_apply_with_argument(&SG(sapi_headers).headers, php_head_apply_header_list_to_hash, return_value);

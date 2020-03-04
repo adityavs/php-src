@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.0 of the PHP license,       |
@@ -151,7 +149,8 @@ typedef struct {
 	zend_ulong convbufsize;
 	unsigned going_long:1;
 	unsigned assume_utf8:1;
-	unsigned _spare:30;
+	signed col_count:16;
+	unsigned _spare:14;
 } pdo_odbc_stmt;
 
 typedef struct {

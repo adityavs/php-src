@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -120,7 +118,7 @@ MBSTRING_API char *php_mb_convert_encoding_ex(
 		const char *input, size_t length,
 		const mbfl_encoding *to_encoding, const mbfl_encoding *from_encoding, size_t *output_len);
 MBSTRING_API char * php_mb_convert_encoding(const char *input, size_t length,
-                                      const char *_to_encoding,
+                                      const mbfl_encoding *to_encoding,
                                       const char *_from_encodings,
                                       size_t *output_len);
 
@@ -169,6 +167,9 @@ ZEND_BEGIN_MODULE_GLOBALS(mbstring)
 	zend_bool internal_encoding_set;
 	zend_bool http_output_set;
 	zend_bool http_input_set;
+#if HAVE_MBREGEX
+    zend_long regex_retry_limit;
+#endif
 ZEND_END_MODULE_GLOBALS(mbstring)
 
 #define MBSTRG(v) ZEND_MODULE_GLOBALS_ACCESSOR(mbstring, v)

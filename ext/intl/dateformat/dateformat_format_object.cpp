@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
@@ -81,7 +79,7 @@ U_CFUNC PHP_FUNCTION(datefmt_format_object)
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|zs!",
 			&object, &format, &locale_str, &locale_len) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if (!locale_str) {
@@ -142,7 +140,9 @@ U_CFUNC PHP_FUNCTION(datefmt_format_object)
 		}
 		dateStyle = timeStyle = (DateFormat::EStyle)Z_LVAL_P(format);
 	} else {
-		convert_to_string_ex(format);
+		if (!try_convert_to_string(format)) {
+			RETURN_THROWS();
+		}
 		if (Z_STRLEN_P(format) == 0) {
 			intl_error_set(NULL, U_ILLEGAL_ARGUMENT_ERROR,
 					"datefmt_format_object: the format is empty", 0);

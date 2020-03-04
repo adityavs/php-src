@@ -91,7 +91,7 @@ TODO:
    part of GD */
 typedef long gdFixed;
 /* Integer to fixed point */
-#define gd_itofx(x) ((x) << 8)
+#define gd_itofx(x) (long)((unsigned long)(x) << 8)
 
 /* Float to fixed point */
 #define gd_ftofx(x) (long)((x) * 256)
@@ -112,7 +112,7 @@ typedef long gdFixed;
 #define gd_mulfx(x,y) (((x) * (y)) >> 8)
 
 /* Divide a fixed by a fixed */
-#define gd_divfx(x,y) (((x) << 8) / (y))
+#define gd_divfx(x,y) ((long)((unsigned long)(x) << 8) / (y))
 
 typedef struct
 {
@@ -658,14 +658,6 @@ static inline int _color_blend (const int dst, const int src)
 	}
 }
 
-static inline int _setEdgePixel(const gdImagePtr src, unsigned int x, unsigned int y, gdFixed coverage, const int bgColor)
-{
-	const gdFixed f_127 = gd_itofx(127);
-	register int c = src->tpixels[y][x];
-	c = c | (( (int) (gd_fxtof(gd_mulfx(coverage, f_127)) + 50.5f)) << 24);
-	return _color_blend(bgColor, c);
-}
-
 static inline int getPixelOverflowTC(gdImagePtr im, const int x, const int y, const int bgColor)
 {
 	if (gdImageBoundsSafe(im, x, y)) {
@@ -1136,54 +1128,6 @@ gdImagePtr gdImageScaleNearestNeighbour(gdImagePtr im, const unsigned int width,
 		dst_offset_y++;
 	}
 	return dst_img;
-}
-
-static inline int getPixelOverflowColorTC(gdImagePtr im, const int x, const int y, const int color)
-{
-	if (gdImageBoundsSafe(im, x, y)) {
-		const int c = im->tpixels[y][x];
-		if (c == im->transparent) {
-			return gdTrueColorAlpha(0, 0, 0, 127);
-		}
-		return c;
-	} else {
-		register int border = 0;
-		if (y < im->cy1) {
-			border = im->tpixels[0][im->cx1];
-			goto processborder;
-		}
-
-		if (y < im->cy1) {
-			border = im->tpixels[0][im->cx1];
-			goto processborder;
-		}
-
-		if (y > im->cy2) {
-			if (x >= im->cx1 && x <= im->cx1) {
-				border = im->tpixels[im->cy2][x];
-				goto processborder;
-			} else {
-				return gdTrueColorAlpha(0, 0, 0, 127);
-			}
-		}
-
-		/* y is bound safe at this point */
-		if (x < im->cx1) {
-			border = im->tpixels[y][im->cx1];
-			goto processborder;
-		}
-
-		if (x > im->cx2) {
-			border = im->tpixels[y][im->cx2];
-		}
-
-processborder:
-		if (border == im->transparent) {
-			return gdTrueColorAlpha(0, 0, 0, 127);
-		} else{
-			return gdTrueColorAlpha(gdTrueColorGetRed(border), gdTrueColorGetGreen(border), gdTrueColorGetBlue(border), 127);
-		}
-	}
 }
 
 static gdImagePtr gdImageScaleBilinearPalette(gdImagePtr im, const unsigned int new_width, const unsigned int new_height)
@@ -1827,8 +1771,8 @@ gdImagePtr gdImageRotateBilinear(gdImagePtr src, const float degrees, const int 
 			const gdFixed f_j = gd_itofx((int)j - (int)new_width/2);
 			const gdFixed f_m = gd_mulfx(f_j,f_sin) + gd_mulfx(f_i,f_cos) + f_0_5 + f_H;
 			const gdFixed f_n = gd_mulfx(f_j,f_cos) - gd_mulfx(f_i,f_sin) + f_0_5 + f_W;
-			const unsigned int m = gd_fxtoi(f_m);
-			const unsigned int n = gd_fxtoi(f_n);
+			const int m = gd_fxtoi(f_m);
+			const int n = gd_fxtoi(f_n);
 
 			if ((m >= 0) && (m < src_h - 1) && (n >= 0) && (n < src_w - 1)) {
 				const gdFixed f_f = f_m - gd_itofx(m);
@@ -2173,7 +2117,7 @@ gdImagePtr gdImageRotateInterpolated(const gdImagePtr src, const float angle, in
 {
 	/* round to two decimals and keep the 100x multiplication to use it in the common square angles
 	   case later. Keep the two decimal precisions so smaller rotation steps can be done, useful for
-	   slow animations, f.e. */
+	   slow animations. */
 	const int angle_rounded = fmod((int) floorf(angle * 100), 360 * 100);
 
 	if (bgcolor < 0) {
@@ -2345,7 +2289,7 @@ int gdTransformAffineGetImage(gdImagePtr *dst,
  *  src_area - Rectangular region to rotate in the src image
  *
  * Returns:
- *  GD_TRUE if the affine is rectilinear or GD_FALSE
+ *  GD_TRUE on success or GD_FALSE on failure
  */
 int gdTransformAffineCopy(gdImagePtr dst,
 		  int dst_x, int dst_y,
@@ -2358,11 +2302,10 @@ int gdTransformAffineCopy(gdImagePtr dst,
 	int backup_clipx1, backup_clipy1, backup_clipx2, backup_clipy2;
 	register int x, y, src_offset_x, src_offset_y;
 	double inv[6];
-	int *dst_p;
 	gdPointF pt, src_pt;
 	gdRect bbox;
 	int end_x, end_y;
-	gdInterpolationMethod interpolation_id_bak = GD_DEFAULT;
+	gdInterpolationMethod interpolation_id_bak = src->interpolation_id;
 
 	/* These methods use special implementations */
 	if (src->interpolation_id == GD_BILINEAR_FIXED || src->interpolation_id == GD_BICUBIC_FIXED || src->interpolation_id == GD_NEAREST_NEIGHBOUR) {
@@ -2398,11 +2341,14 @@ int gdTransformAffineCopy(gdImagePtr dst,
 
 	gdImageGetClip(dst, &c1x, &c1y, &c2x, &c2y);
 
-	end_x = bbox.width  + (int) fabs(bbox.x);
-	end_y = bbox.height + (int) fabs(bbox.y);
+	end_x = bbox.width  + abs(bbox.x);
+	end_y = bbox.height + abs(bbox.y);
 
 	/* Get inverse affine to let us work with destination -> source */
-	gdAffineInvert(inv, affine);
+	if (gdAffineInvert(inv, affine) == GD_FALSE) {
+		gdImageSetInterpolationMethod(src, interpolation_id_bak);
+		return GD_FALSE;
+	}
 
 	src_offset_x =  src_region->x;
 	src_offset_y =  src_region->y;
@@ -2418,11 +2364,18 @@ int gdTransformAffineCopy(gdImagePtr dst,
 		}
 	} else {
 		for (y = 0; y <= end_y; y++) {
+			unsigned char *dst_p = NULL;
+			int *tdst_p = NULL;
+
 			pt.y = y + 0.5 + bbox.y;
 			if ((dst_y + y) < 0 || ((dst_y + y) > gdImageSY(dst) -1)) {
 				continue;
 			}
-			dst_p = dst->tpixels[dst_y + y] + dst_x;
+			if (dst->trueColor) {
+				tdst_p = dst->tpixels[dst_y + y] + dst_x;
+			} else {
+				dst_p = dst->pixels[dst_y + y] + dst_x;
+			}
 
 			for (x = 0; x <= end_x; x++) {
 				pt.x = x + 0.5 + bbox.x;
@@ -2431,7 +2384,11 @@ int gdTransformAffineCopy(gdImagePtr dst,
 				if ((dst_x + x) < 0 || (dst_x + x) > (gdImageSX(dst) - 1)) {
 					break;
 				}
-				*(dst_p++) = getPixelInterpolated(src, src_offset_x + src_pt.x, src_offset_y + src_pt.y, -1);
+				if (dst->trueColor) {
+					*(tdst_p++) = getPixelInterpolated(src, src_offset_x + src_pt.x, src_offset_y + src_pt.y, -1);
+				} else {
+					*(dst_p++) = getPixelInterpolated(src, src_offset_x + src_pt.x, src_offset_y + src_pt.y, -1);
+				}
 			}
 		}
 	}
@@ -2575,6 +2532,29 @@ int gdImageSetInterpolationMethod(gdImagePtr im, gdInterpolationMethod id)
 	}
 	im->interpolation_id = id;
 	return 1;
+}
+
+/**
+ * Function: gdImageGetInterpolationMethod
+ *
+ * Get the current interpolation method
+ *
+ * This is here so that the value can be read via a language or VM with an FFI
+ * but no (portable) way to extract the value from the struct.
+ *
+ * Parameters:
+ *   im - The image.
+ *
+ * Returns:
+ *   The current interpolation method.
+ *
+ * See also:
+ *   - <gdInterpolationMethod>
+ *   - <gdImageSetInterpolationMethod>
+ */
+gdInterpolationMethod gdImageGetInterpolationMethod(gdImagePtr im)
+{
+    return im->interpolation_id;
 }
 
 #ifdef _MSC_VER

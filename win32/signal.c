@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -21,9 +19,10 @@
 
 #include "win32/console.h"
 
-ZEND_TLS zval ctrl_handler;
-ZEND_TLS DWORD ctrl_evt = (DWORD)-1;
-ZEND_TLS zend_bool *vm_interrupt_flag = NULL;
+/* true globals; only used from main thread and from kernel callback */
+static zval ctrl_handler;
+static DWORD ctrl_evt = (DWORD)-1;
+static zend_bool *vm_interrupt_flag = NULL;
 
 static void (*orig_interrupt_function)(zend_execute_data *execute_data);
 
@@ -78,7 +77,7 @@ static BOOL WINAPI php_win32_signal_system_ctrl_handler(DWORD evt)
 		return FALSE;
 	}
 
-	(void)InterlockedExchange((LONG*)vm_interrupt_flag, 1);
+	(void)InterlockedExchange8(vm_interrupt_flag, 1);
 
 	ctrl_evt = evt;
 
@@ -92,21 +91,22 @@ PHP_FUNCTION(sapi_windows_set_ctrl_handler)
 	zval *handler = NULL;
 	zend_bool add = 1;
 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|b", &handler, &add) == FAILURE) {
+		RETURN_THROWS();
+	}
+
 #if ZTS
 	if (!tsrm_is_main_thread()) {
-		php_error_docref(NULL, E_WARNING, "CTRL events can only be received on the main thread");
+		zend_throw_error(NULL, "CTRL events can only be received on the main thread");
 		return;
 	}
 #endif
 
 	if (!php_win32_console_is_cli_sapi()) {
-		php_error_docref(NULL, E_WARNING, "CTRL events trapping is only supported on console");
+		zend_throw_error(NULL, "CTRL events trapping is only supported on console");
 		return;
 	}
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|b", &handler, &add) == FAILURE) {
-		return;
-	}
 
 	if (IS_NULL == Z_TYPE_P(handler)) {
 		zval_dtor(&ctrl_handler);
@@ -119,9 +119,9 @@ PHP_FUNCTION(sapi_windows_set_ctrl_handler)
 
 	if (!zend_is_callable(handler, 0, NULL)) {
 		zend_string *func_name = zend_get_callable_name(handler);
-		php_error_docref(NULL, E_WARNING, "%s is not a callable function name error", ZSTR_VAL(func_name));
+		zend_type_error("%s is not a callable function name error", ZSTR_VAL(func_name));
 		zend_string_release_ex(func_name, 0);
-		RETURN_FALSE;
+		return;
 	}
 
 	if (!SetConsoleCtrlHandler(NULL, FALSE) || !SetConsoleCtrlHandler(php_win32_signal_system_ctrl_handler, add)) {
@@ -142,12 +142,12 @@ PHP_FUNCTION(sapi_windows_generate_ctrl_event)
 	zend_long evt, pid = 0;
 	zend_bool ret = 0;
 
-	if (!php_win32_console_is_cli_sapi()) {
-		php_error_docref(NULL, E_WARNING, "CTRL events trapping is only supported on console");
-		return;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|l", &evt, &pid) == FAILURE) {
+		RETURN_THROWS();
 	}
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|l", &evt, &pid) == FAILURE) {
+	if (!php_win32_console_is_cli_sapi()) {
+		zend_throw_error(NULL, "CTRL events trapping is only supported on console");
 		return;
 	}
 

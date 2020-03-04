@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -25,7 +23,7 @@ PHPAPI zend_string *_php_math_number_format(double, int, char, char);
 PHPAPI zend_string *_php_math_number_format_ex(double, int, char *, size_t, char *, size_t);
 PHPAPI zend_string * _php_math_longtobase(zval *arg, int base);
 PHPAPI zend_long _php_math_basetolong(zval *arg, int base);
-PHPAPI int _php_math_basetozval(zval *arg, int base, zval *ret);
+PHPAPI void _php_math_basetozval(zend_string *str, int base, zval *ret);
 PHPAPI zend_string * _php_math_zvaltobase(zval *arg, int base);
 
 PHP_FUNCTION(sin);
@@ -61,12 +59,13 @@ PHP_FUNCTION(octdec);
 PHP_FUNCTION(base_convert);
 PHP_FUNCTION(number_format);
 PHP_FUNCTION(fmod);
+PHP_FUNCTION(fdiv);
 PHP_FUNCTION(deg2rad);
 PHP_FUNCTION(rad2deg);
 PHP_FUNCTION(intdiv);
 
    /*
-   WARNING: these functions are expermental: they could change their names or
+   WARNING: these functions are experimental: they could change their names or
    disappear in the next version of PHP!
    */
 PHP_FUNCTION(hypot);

@@ -7,13 +7,13 @@ opcache.file_update_protection=0
 opcache.jit_buffer_size=1M
 ;opcache.jit_debug=257
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
 function foo() {
-	$a = array();
-	$b = $a;
-	$a = $b;
+    $a = array();
+    $b = $a;
+    $a = $b;
 }
 foo();
 echo "ok\n";

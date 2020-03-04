@@ -36,7 +36,6 @@ var_dump( strripos($multi_line_str, "") );
 var_dump( strripos($multi_line_str, " ") );
 
 ?>
-===DONE===
 --EXPECT--
 *** Testing strripos() function: with heredoc strings ***
 -- With heredoc string containing multi lines --
@@ -54,6 +53,5 @@ bool(false)
 -- Multi line strings with no offset -- 
 int(18)
 int(31)
-bool(false)
+int(63)
 int(55)
-===DONE===

@@ -88,17 +88,20 @@ $values = array(
 $counter = 1;
 foreach($values as $value) {
   echo "\n -- Iteration $counter --\n";
-  var_dump( vsprintf($value,$args) );
+  try {
+    var_dump(vsprintf($value, $args));
+  } catch (TypeError $exception) {
+    echo $exception->getMessage() . "\n";
+  }
   $counter++;
-
-};
+}
 
 // closing the resource
 fclose($file_handle);
 
 echo "Done";
 ?>
---EXPECTF--
+--EXPECT--
 *** Testing vsprintf() : with unexpected values for format argument ***
 
  -- Iteration 1 --
@@ -129,29 +132,19 @@ string(13) "1.07654321E-9"
 string(3) "0.5"
 
  -- Iteration 10 --
-
-Notice: Array to string conversion in %s on line %d
-string(5) "Array"
+vsprintf(): Argument #1 ($format) must be of type string, array given
 
  -- Iteration 11 --
-
-Notice: Array to string conversion in %s on line %d
-string(5) "Array"
+vsprintf(): Argument #1 ($format) must be of type string, array given
 
  -- Iteration 12 --
-
-Notice: Array to string conversion in %s on line %d
-string(5) "Array"
+vsprintf(): Argument #1 ($format) must be of type string, array given
 
  -- Iteration 13 --
-
-Notice: Array to string conversion in %s on line %d
-string(5) "Array"
+vsprintf(): Argument #1 ($format) must be of type string, array given
 
  -- Iteration 14 --
-
-Notice: Array to string conversion in %s on line %d
-string(5) "Array"
+vsprintf(): Argument #1 ($format) must be of type string, array given
 
  -- Iteration 15 --
 string(0) ""
@@ -187,5 +180,5 @@ string(0) ""
 string(0) ""
 
  -- Iteration 26 --
-string(%d) "Resource id #%d"
+vsprintf(): Argument #1 ($format) must be of type string, resource given
 Done

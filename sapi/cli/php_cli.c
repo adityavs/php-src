@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -175,11 +173,8 @@ const opt_struct OPTIONS[] = {
 	{'-', 0, NULL} /* end of args */
 };
 
-static int module_name_cmp(const void *a, const void *b) /* {{{ */
+static int module_name_cmp(Bucket *f, Bucket *s) /* {{{ */
 {
-	Bucket *f = (Bucket *) a;
-	Bucket *s = (Bucket *) b;
-
 	return strcasecmp(((zend_module_entry *)Z_PTR(f->val))->name,
 				  ((zend_module_entry *)Z_PTR(s->val))->name);
 }
@@ -236,19 +231,18 @@ static void print_extensions(void) /* {{{ */
 
 static inline int sapi_cli_select(php_socket_t fd)
 {
-	fd_set wfd, dfd;
+	fd_set wfd;
 	struct timeval tv;
 	int ret;
 
 	FD_ZERO(&wfd);
-	FD_ZERO(&dfd);
 
 	PHP_SAFE_FD_SET(fd, &wfd);
 
 	tv.tv_sec = (long)FG(default_socket_timeout);
 	tv.tv_usec = 0;
 
-	ret = php_select(fd+1, &dfd, &wfd, &dfd, &tv);
+	ret = php_select(fd+1, NULL, &wfd, NULL, &tv);
 
 	return ret != -1;
 }
@@ -414,7 +408,7 @@ static int php_cli_startup(sapi_module_struct *sapi_module) /* {{{ */
 
 /* {{{ sapi_cli_ini_defaults */
 
-/* overwriteable ini defaults must be set in sapi_cli_ini_defaults() */
+/* overwritable ini defaults must be set in sapi_cli_ini_defaults() */
 #define INI_DEFAULT(name,value)\
 	ZVAL_NEW_STR(&tmp, zend_string_init(value, sizeof(value)-1, 1));\
 	zend_hash_str_update(configuration_hash, name, sizeof(name)-1, &tmp);\
@@ -587,39 +581,15 @@ static const char *param_mode_conflict = "Either execute direct code, process st
 
 /* {{{ cli_seek_file_begin
  */
-static int cli_seek_file_begin(zend_file_handle *file_handle, char *script_file, int *lineno)
+static int cli_seek_file_begin(zend_file_handle *file_handle, char *script_file)
 {
-	int c;
-
-	*lineno = 1;
-
-	file_handle->type = ZEND_HANDLE_FP;
-	file_handle->opened_path = NULL;
-	file_handle->free_filename = 0;
-	if (!(file_handle->handle.fp = VCWD_FOPEN(script_file, "rb"))) {
+	FILE *fp = VCWD_FOPEN(script_file, "rb");
+	if (!fp) {
 		php_printf("Could not open input file: %s\n", script_file);
 		return FAILURE;
 	}
-	file_handle->filename = script_file;
 
-	/* #!php support */
-	c = fgetc(file_handle->handle.fp);
-	if (c == '#' && (c = fgetc(file_handle->handle.fp)) == '!') {
-		while (c != '\n' && c != '\r' && c != EOF) {
-			c = fgetc(file_handle->handle.fp);	/* skip to end of line */
-		}
-		/* handle situations where line is terminated by \r\n */
-		if (c == '\r') {
-			if (fgetc(file_handle->handle.fp) != '\n') {
-				zend_long pos = zend_ftell(file_handle->handle.fp);
-				zend_fseek(file_handle->handle.fp, pos - 1, SEEK_SET);
-			}
-		}
-		*lineno = 2;
-	} else {
-		rewind(file_handle->handle.fp);
-	}
-
+	zend_stream_init_fp(file_handle, fp, script_file);
 	return SUCCESS;
 }
 /* }}} */
@@ -649,7 +619,6 @@ static int do_cli(int argc, char **argv) /* {{{ */
 	char *arg_free=NULL, **arg_excp=&arg_free;
 	char *script_file=NULL, *translated_path = NULL;
 	int interactive=0;
-	int lineno = 0;
 	const char *param_error=NULL;
 	int hide_argv = 0;
 
@@ -922,7 +891,7 @@ static int do_cli(int argc, char **argv) /* {{{ */
 			php_optind++;
 		}
 		if (script_file) {
-			if (cli_seek_file_begin(&file_handle, script_file, &lineno) != SUCCESS) {
+			if (cli_seek_file_begin(&file_handle, script_file) != SUCCESS) {
 				goto err;
 			} else {
 				char real_path[MAXPATHLEN];
@@ -934,14 +903,10 @@ static int do_cli(int argc, char **argv) /* {{{ */
 		} else {
 			/* We could handle PHP_MODE_PROCESS_STDIN in a different manner  */
 			/* here but this would make things only more complicated. And it */
-			/* is consitent with the way -R works where the stdin file handle*/
+			/* is consistent with the way -R works where the stdin file handle*/
 			/* is also accessible. */
-			file_handle.filename = "Standard input code";
-			file_handle.handle.fp = stdin;
+			zend_stream_init_fp(&file_handle, stdin, "Standard input code");
 		}
-		file_handle.type = ZEND_HANDLE_FP;
-		file_handle.opened_path = NULL;
-		file_handle.free_filename = 0;
 		php_self = (char*)file_handle.filename;
 
 		/* before registering argv to module exchange the *new* argv[0] */
@@ -960,7 +925,13 @@ static int do_cli(int argc, char **argv) /* {{{ */
 			goto err;
 		}
 		request_started = 1;
-		CG(start_lineno) = lineno;
+		CG(skip_shebang) = 1;
+
+		zend_register_bool_constant(
+			ZEND_STRL("PHP_CLI_PROCESS_TITLE"),
+			is_ps_title_available() == PS_TITLE_SUCCESS,
+			CONST_CS, 0);
+
 		*arg_excp = arg_free; /* reconstuct argv */
 
 		if (hide_argv) {
@@ -1044,10 +1015,10 @@ static int do_cli(int argc, char **argv) /* {{{ */
 						}
 					} else {
 						if (script_file) {
-							if (cli_seek_file_begin(&file_handle, script_file, &lineno) != SUCCESS) {
+							if (cli_seek_file_begin(&file_handle, script_file) != SUCCESS) {
 								exit_status = 1;
 							} else {
-								CG(start_lineno) = lineno;
+								CG(skip_shebang) = 1;
 								php_execute_script(&file_handle);
 								exit_status = EG(exit_status);
 							}
@@ -1108,7 +1079,8 @@ static int do_cli(int argc, char **argv) /* {{{ */
 						zval_ptr_dtor(&tmp);
 						EG(exception) = NULL;
 					} else {
-						zend_call_method_with_1_params(NULL, reflection_ptr, NULL, "export", NULL, &ref);
+						zend_print_zval(&ref, 0);
+						zend_write("\n", 1);
 					}
 					zval_ptr_dtor(&ref);
 					zval_ptr_dtor(&arg);
@@ -1251,7 +1223,7 @@ int main(int argc, char *argv[])
 	setmode(_fileno(stderr), O_BINARY);		/* make the stdio mode be binary */
 #endif
 
-	while ((c = php_getopt(argc, argv, OPTIONS, &php_optarg, &php_optind, 0, 2))!=-1) {
+	while ((c = php_getopt(argc, argv, OPTIONS, &php_optarg, &php_optind, 1, 2))!=-1) {
 		switch (c) {
 			case 'c':
 				if (ini_path_override) {
@@ -1302,6 +1274,10 @@ int main(int argc, char *argv[])
 			case 'h': /* help & quit */
 			case '?':
 				php_cli_usage(argv[0]);
+				goto out;
+			case PHP_GETOPT_INVALID_ARG: /* print usage on bad options, exit 1 */
+				php_cli_usage(argv[0]);
+				exit_status = 1;
 				goto out;
 			case 'i': case 'v': case 'm':
 				sapi_module = &cli_sapi_module;

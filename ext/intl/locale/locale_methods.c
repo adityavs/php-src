@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
@@ -209,6 +207,10 @@ static zend_off_t getSingletonPos(const char* str)
    Get default locale */
 PHP_NAMED_FUNCTION(zif_locale_get_default)
 {
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	RETURN_STRING( intl_locale_get_default(  ) );
 }
 
@@ -227,7 +229,7 @@ PHP_NAMED_FUNCTION(zif_locale_set_default)
 
 	if(zend_parse_parameters( ZEND_NUM_ARGS(),  "S", &locale_name) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if (ZSTR_LEN(locale_name) == 0) {
@@ -394,7 +396,7 @@ static void get_icu_value_src_php( char* tag_name, INTERNAL_FUNCTION_PARAMETERS)
 
 	if(zend_parse_parameters( ZEND_NUM_ARGS(), "s",
 	&loc_name ,&loc_name_len ) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
     }
 
 	if(loc_name_len == 0) {
@@ -495,11 +497,11 @@ static void get_icu_disp_value_src_php( char* tag_name, INTERNAL_FUNCTION_PARAME
 
 	intl_error_reset( NULL );
 
-	if(zend_parse_parameters( ZEND_NUM_ARGS(), "s|s",
+	if(zend_parse_parameters( ZEND_NUM_ARGS(), "s|s!",
 		&loc_name, &loc_name_len ,
 		&disp_loc_name ,&disp_loc_name_len ) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
     if(loc_name_len > ULOC_FULLNAME_CAPACITY) {
@@ -688,7 +690,7 @@ PHP_FUNCTION( locale_get_keywords )
     if(zend_parse_parameters( ZEND_NUM_ARGS(), "s",
         &loc_name, &loc_name_len ) == FAILURE)
     {
-        RETURN_FALSE;
+        RETURN_THROWS();
     }
 
 	INTL_CHECK_LOCALE_LEN(strlen(loc_name));
@@ -907,7 +909,7 @@ PHP_FUNCTION(locale_compose)
 	if(zend_parse_parameters( ZEND_NUM_ARGS(), "a",
 		&arr) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	hash_arr = Z_ARRVAL_P( arr );
@@ -1093,7 +1095,7 @@ PHP_FUNCTION(locale_parse)
     if(zend_parse_parameters( ZEND_NUM_ARGS(), "s",
         &loc_name, &loc_name_len ) == FAILURE)
     {
-        RETURN_FALSE;
+        RETURN_THROWS();
     }
 
     INTL_CHECK_LOCALE_LEN(strlen(loc_name));
@@ -1140,7 +1142,7 @@ PHP_FUNCTION(locale_get_all_variants)
 	if(zend_parse_parameters( ZEND_NUM_ARGS(), "s",
 	&loc_name, &loc_name_len ) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if(loc_name_len == 0) {
@@ -1243,7 +1245,7 @@ PHP_FUNCTION(locale_filter_matches)
 		&lang_tag, &lang_tag_len , &loc_range , &loc_range_len ,
 		&boolCanonical) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if(loc_range_len == 0) {
@@ -1261,7 +1263,7 @@ PHP_FUNCTION(locale_filter_matches)
 	if( boolCanonical ){
 		/* canonicalize loc_range */
 		can_loc_range=get_icu_value_internal( loc_range , LOC_CANONICALIZE_TAG , &result , 0);
-		if( result ==0) {
+		if( result <=0) {
 			intl_error_set( NULL, status,
 				"locale_filter_matches : unable to canonicalize loc_range" , 0 );
 			RETURN_FALSE;
@@ -1269,7 +1271,7 @@ PHP_FUNCTION(locale_filter_matches)
 
 		/* canonicalize lang_tag */
 		can_lang_tag = get_icu_value_internal( lang_tag , LOC_CANONICALIZE_TAG , &result ,  0);
-		if( result ==0) {
+		if( result <=0) {
 			intl_error_set( NULL, status,
 				"locale_filter_matches : unable to canonicalize lang_tag" , 0 );
 			RETURN_FALSE;
@@ -1514,9 +1516,9 @@ PHP_FUNCTION(locale_lookup)
 
 	intl_error_reset( NULL );
 
-	if(zend_parse_parameters( ZEND_NUM_ARGS(), "as|bS", &arr, &loc_range, &loc_range_len,
+	if(zend_parse_parameters( ZEND_NUM_ARGS(), "as|bS!", &arr, &loc_range, &loc_range_len,
 		&boolCanonical,	&fallback_loc_str) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if(loc_range_len == 0) {
@@ -1551,11 +1553,11 @@ PHP_FUNCTION(locale_lookup)
 /* }}} */
 
 /* {{{ proto string Locale::acceptFromHttp(string $http_accept)
-* Tries to find out best available locale based on HTTP �Accept-Language� header
+* Tries to find out best available locale based on HTTP "Accept-Language" header
 */
 /* }}} */
 /* {{{ proto string locale_accept_from_http(string $http_accept)
-* Tries to find out best available locale based on HTTP �Accept-Language� header
+* Tries to find out best available locale based on HTTP "Accept-Language" header
 */
 PHP_FUNCTION(locale_accept_from_http)
 {
@@ -1569,7 +1571,7 @@ PHP_FUNCTION(locale_accept_from_http)
 
 	if(zend_parse_parameters( ZEND_NUM_ARGS(), "s", &http_accept, &http_accept_len) == FAILURE)
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 	if(http_accept_len > ULOC_FULLNAME_CAPACITY) {
 		/* check each fragment, if any bigger than capacity, can't do it due to bug #72533 */

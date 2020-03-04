@@ -36,16 +36,6 @@ struct _WSAMSG {
     WSABUF           Control;			//void *msg_control, size_t msg_controllen
     DWORD            dwFlags;			//int msg_flags
 }
-struct __WSABUF {
-  u_long			len;				//size_t iov_len (2nd member)
-  char FAR			*buf;				//void *iov_base (1st member)
-}
-struct _WSACMSGHDR {
-  UINT        cmsg_len;					//socklen_t cmsg_len
-  INT         cmsg_level;				//int       cmsg_level
-  INT         cmsg_type;				//int       cmsg_type;
-  followed by UCHAR cmsg_data[]
-}
 */
 # define msg_name		name
 # define msg_namelen	namelen
@@ -57,7 +47,6 @@ struct _WSACMSGHDR {
 # define iov_base		buf
 # define iov_len		len
 
-# define cmsghdr		_WSACMSGHDR
 # ifdef CMSG_DATA
 #  undef CMSG_DATA
 # endif
@@ -199,7 +188,7 @@ static void do_to_zval_err(res_context *ctx, const char *fmt, ...)
 void err_msg_dispose(struct err_s *err)
 {
 	if (err->msg != NULL) {
-		php_error_docref0(NULL, err->level, "%s", err->msg);
+		php_error_docref(NULL, err->level, "%s", err->msg);
 		if (err->should_free) {
 			efree(err->msg);
 		}
@@ -332,7 +321,10 @@ double_case:
 		zend_long lval;
 		double dval;
 
-		convert_to_string(&lzval);
+		if (!try_convert_to_string(&lzval)) {
+			ctx->err.has_error = 1;
+			break;
+		}
 
 		switch (is_numeric_string(Z_STRVAL(lzval), Z_STRLEN(lzval), &lval, &dval, 0)) {
 		case IS_DOUBLE:
@@ -438,6 +430,8 @@ static void from_zval_write_sa_family(const zval *arr_value, char *field, ser_co
 	ival = (sa_family_t)lval;
 	memcpy(field, &ival, sizeof(ival));
 }
+
+#ifdef SO_PASSCRED
 static void from_zval_write_pid_t(const zval *arr_value, char *field, ser_context *ctx)
 {
 	zend_long lval;
@@ -485,6 +479,7 @@ static void from_zval_write_uid_t(const zval *arr_value, char *field, ser_contex
 	ival = (uid_t)lval;
 	memcpy(field, &ival, sizeof(ival));
 }
+#endif
 
 void to_zval_read_int(const char *data, zval *zv, res_context *ctx)
 {
@@ -521,6 +516,7 @@ static void to_zval_read_sa_family(const char *data, zval *zv, res_context *ctx)
 
 	ZVAL_LONG(zv, (zend_long)ival);
 }
+#ifdef SO_PASSCRED
 static void to_zval_read_pid_t(const char *data, zval *zv, res_context *ctx)
 {
 	pid_t ival;
@@ -535,6 +531,7 @@ static void to_zval_read_uid_t(const char *data, zval *zv, res_context *ctx)
 
 	ZVAL_LONG(zv, (zend_long)ival);
 }
+#endif
 
 /* CONVERSIONS for sockaddr */
 static void from_zval_write_sin_addr(const zval *zaddr_str, char *inaddr, ser_context *ctx)
@@ -1006,13 +1003,6 @@ static void to_zval_read_control_array(const char *msghdr_c, zval *zv, res_conte
 	char			buf[sizeof("element #4294967295")];
 	char			*bufp = buf;
 	uint32_t		i = 1;
-
-	/*if (msg->msg_flags & MSG_CTRUNC) {
-		php_error_docref0(NULL, E_WARNING, "The MSG_CTRUNC flag is present; will not "
-				"attempt to read control messages");
-		ZVAL_FALSE(zv);
-		return;
-	}*/
 
 	array_init(zv);
 

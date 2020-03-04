@@ -24,6 +24,7 @@ had several contributions accepted, commit privileges are often quickly granted.
 * [What happens after submitting contribution?](#what-happens-after-submitting-contribution)
 * [What happens when your contribution is applied?](#what-happens-when-your-contribution-is-applied)
 * [Git commit rules](#git-commit-rules)
+* [Copyright and license headers](#copyright-and-license-headers)
 
 ## Pull requests
 
@@ -34,7 +35,7 @@ If you are fixing a bug, then please submit your PR against the lowest actively
 supported branch of PHP that the bug affects (only green branches on
 [the supported version page](https://www.php.net/supported-versions.php) are
 supported). For example, at the time of writing, the lowest supported version is
-PHP 7.2, which corresponds to the `PHP-7.2` branch in Git. Please also make sure
+PHP 7.3, which corresponds to the `PHP-7.3` branch in Git. Please also make sure
 you add a link to the PR in the bug on [the bug tracker](https://bugs.php.net/).
 
 Pull requests implementing RFCs should be submitted against `master`.
@@ -92,6 +93,14 @@ a huge win for every PHP user.
 Submitting test scripts helps us to understand what functionality has changed.
 It is important for the stability and maintainability of PHP that tests are
 comprehensive.
+
+Failure conditions of `zend_parse_parameters`, `ZEND_PARSE_PARAMETERS()` and
+similar functions should not be tested. These parameter parsing APIs are already
+extensively tested, and additional tests only complicate future modifications.
+
+For newly created tests, a `--CREDITS--` section should no longer be included,
+as test authorship is already accurately tracked by Git. If multiple authors
+should be credited, the `Co-authored-by` tag in the commit message may be used.
 
 ## Writing documentation
 
@@ -245,7 +254,7 @@ included.
 
 ## Checklist for submitting contribution
 
-- Read [CODING_STANDARDS](/CODING_STANDARDS) before you start working.
+- Read [Coding standards](/CODING_STANDARDS.md) before you start working.
 - Update git source just before running your final `diff` and before testing.
 - Add in-line comments and/or have external documentation ready. Use only
   `/* */` style comments, not `//`.
@@ -322,10 +331,10 @@ Currently we have the following branches in use:
 | Branch    |           |
 | --------- | --------- |
 | master    | Active development branch for PHP 8.0, which is open for backwards incompatible changes and major internal API changes. |
-| PHP-7.4   | Active development branch for PHP 7.4, which is open for new features and minor internal API changes. |
+| PHP-7.4   | Is used to release the PHP 7.4.x series. This is a current stable version and is open for bugfixes only. |
 | PHP-7.3   | Is used to release the PHP 7.3.x series. This is a current stable version and is open for bugfixes only. |
-| PHP-7.2   | Is used to release the PHP 7.2.x series. This is a current stable version and is open for bugfixes only. |
-| PHP-7.1   | Is used to release the PHP 7.1.x series. This is an old stable version and is open for security fixes only. |
+| PHP-7.2   | Is used to release the PHP 7.2.x series. This is an old stable version and is open for security fixes only. |
+| PHP-7.1   | This branch is closed. |
 | PHP-7.0   | This branch is closed. |
 | PHP-5.6   | This branch is closed. |
 | PHP-5.5   | This branch is closed. |
@@ -339,8 +348,8 @@ Currently we have the following branches in use:
 The next few rules are more of a technical nature:
 
 1. All non-security bugfix changes should first go to the lowest bugfix branch
-   (i.e. 7.2) and then get merged up to all other branches. All security fixes
-   should go to the lowest security fixes branch (i.e 7.1). If a change is not
+   (i.e. 7.3) and then get merged up to all other branches. All security fixes
+   should go to the lowest security fixes branch (i.e 7.2). If a change is not
    needed for later branches (i.e. fixes for features which were dropped from
    later branches) an empty merge should be done.
 
@@ -393,5 +402,27 @@ decreasing order under the fixed version.
 
 You can use [gitweb](https://git.php.net/) to look at PHP Git repository in
 various ways.
+
+## Copyright and license headers
+
+New source code files should include the following header block:
+
+```c
+/*
+  +----------------------------------------------------------------------+
+  | Copyright (c) The PHP Group                                          |
+  +----------------------------------------------------------------------+
+  | This source file is subject to version 3.01 of the PHP license,      |
+  | that is bundled with this package in the file LICENSE, and is        |
+  | available through the world-wide-web at the following url:           |
+  | https://www.php.net/license/3_01.txt                                 |
+  | If you did not receive a copy of the PHP license and are unable to   |
+  | obtain it through the world-wide-web, please send a note to          |
+  | license@php.net so we can mail you a copy immediately.               |
+  +----------------------------------------------------------------------+
+  | Author:                                                              |
+  +----------------------------------------------------------------------+
+*/
+```
 
 Thank you for contributing to PHP!

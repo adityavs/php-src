@@ -1,10 +1,5 @@
 --TEST--
 Test asort() function : usage variations - sort strings
---SKIPIF--
-<?php
-if (substr(PHP_OS, 0, 3) == 'WIN') {
-  die("skip Output tested contains chars that are not shown the same on windows concole (ESC and co)");
-}
 --FILE--
 <?php
 /* Prototype  : bool asort ( array &$array [, int $asort_flags] )
@@ -15,7 +10,7 @@ if (substr(PHP_OS, 0, 3) == 'WIN') {
 
 /*
  * testing asort() by providing different string arrays for $array argument with following flag values
- *  flag value as defualt
+ *  flag value as default
  *  SORT_REGULAR - compare items normally
  *  SORT_STRING  - compare items as strings
 */

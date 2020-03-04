@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -37,7 +35,6 @@
 #include "microtime.h"
 #include "url.h"
 #include "pageinfo.h"
-#include "cyr_convert.h"
 #include "php_link.h"
 #include "fsock.h"
 #include "php_image.h"

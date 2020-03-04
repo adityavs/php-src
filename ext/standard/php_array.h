@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -125,7 +123,7 @@ PHPAPI zend_long php_count_recursive(HashTable *ht);
 #define ARRAY_FILTER_USE_KEY	2
 
 ZEND_BEGIN_MODULE_GLOBALS(array)
-	compare_func_t *multisort_func;
+	bucket_compare_func_t *multisort_func;
 ZEND_END_MODULE_GLOBALS(array)
 
 #define ARRAYG(v) ZEND_MODULE_GLOBALS_ACCESSOR(array, v)

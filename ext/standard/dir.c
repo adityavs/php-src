@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -25,6 +23,7 @@
 #include "php_string.h"
 #include "php_scandir.h"
 #include "basic_functions.h"
+#include "basic_functions_arginfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -68,34 +67,30 @@ static zend_class_entry *dir_class_entry_ptr;
 		myself = getThis(); \
 		if (myself) { \
 			if ((tmp = zend_hash_str_find(Z_OBJPROP_P(myself), "handle", sizeof("handle")-1)) == NULL) { \
-				php_error_docref(NULL, E_WARNING, "Unable to find my handle property"); \
-				RETURN_FALSE; \
+				zend_throw_error(NULL, "Unable to find my handle property"); \
+				RETURN_THROWS(); \
 			} \
 			if ((dirp = (php_stream *)zend_fetch_resource_ex(tmp, "Directory", php_file_le_stream())) == NULL) { \
-				RETURN_FALSE; \
+				RETURN_THROWS(); \
 			} \
 		} else { \
-			if (!DIRG(default_dir) || \
-				(dirp = (php_stream *)zend_fetch_resource(DIRG(default_dir), "Directory", php_file_le_stream())) == NULL) { \
-				RETURN_FALSE; \
+			if (!DIRG(default_dir)) { \
+				zend_type_error("No resource supplied"); \
+				RETURN_THROWS(); \
+			} else if ((dirp = (php_stream *)zend_fetch_resource(DIRG(default_dir), "Directory", php_file_le_stream())) == NULL) { \
+				RETURN_THROWS(); \
 			} \
 		} \
 	} else { \
 		if ((dirp = (php_stream *)zend_fetch_resource(Z_RES_P(id), "Directory", php_file_le_stream())) == NULL) { \
-			RETURN_FALSE; \
+			RETURN_THROWS(); \
 		} \
 	}
 
-/* {{{ arginfo */
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dir, 0, 0, 0)
-	ZEND_ARG_INFO(0, dir_handle)
-ZEND_END_ARG_INFO()
-/* }}} */
-
 static const zend_function_entry php_dir_class_functions[] = {
-	PHP_FALIAS(close,	closedir,		arginfo_dir)
-	PHP_FALIAS(rewind,	rewinddir,		arginfo_dir)
-	PHP_NAMED_FE(read,  php_if_readdir, arginfo_dir)
+	PHP_FALIAS(close,	closedir,		arginfo_class_Directory_close)
+	PHP_FALIAS(rewind,	rewinddir,		arginfo_class_Directory_rewind)
+	PHP_FALIAS(read,	readdir,		arginfo_class_Directory_read)
 	PHP_FE_END
 };
 
@@ -239,7 +234,7 @@ static void _php_do_opendir(INTERNAL_FUNCTION_PARAMETERS, int createobject)
 }
 /* }}} */
 
-/* {{{ proto mixed opendir(string path[, resource context])
+/* {{{ proto resource|false opendir(string path[, resource context])
    Open a directory and return a dir_handle */
 PHP_FUNCTION(opendir)
 {
@@ -247,7 +242,7 @@ PHP_FUNCTION(opendir)
 }
 /* }}} */
 
-/* {{{ proto object dir(string directory[, resource context])
+/* {{{ proto object|false dir(string directory[, resource context])
    Directory class with properties, handle and class and methods read, rewind and close */
 PHP_FUNCTION(getdir)
 {
@@ -255,7 +250,7 @@ PHP_FUNCTION(getdir)
 }
 /* }}} */
 
-/* {{{ proto void closedir([resource dir_handle])
+/* {{{ proto bool closedir([resource dir_handle])
    Close directory connection identified by the dir_handle */
 PHP_FUNCTION(closedir)
 {
@@ -266,8 +261,8 @@ PHP_FUNCTION(closedir)
 	FETCH_DIRP();
 
 	if (!(dirp->flags & PHP_STREAM_FLAG_IS_DIR)) {
-		php_error_docref(NULL, E_WARNING, "%d is not a valid Directory resource", dirp->res->handle);
-		RETURN_FALSE;
+		zend_type_error("%d is not a valid Directory resource", dirp->res->handle);
+		RETURN_THROWS();
 	}
 
 	res = dirp->res;
@@ -290,7 +285,7 @@ PHP_FUNCTION(chroot)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_PATH(str, str_len)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	ret = chroot(str);
 	if (ret != 0) {
@@ -322,7 +317,7 @@ PHP_FUNCTION(chdir)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_PATH(str, str_len)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (php_check_open_basedir(str)) {
 		RETURN_FALSE;
@@ -354,9 +349,7 @@ PHP_FUNCTION(getcwd)
 	char path[MAXPATHLEN];
 	char *ret=NULL;
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 #if HAVE_GETCWD
 	ret = VCWD_GETCWD(path, MAXPATHLEN);
@@ -382,17 +375,17 @@ PHP_FUNCTION(rewinddir)
 	FETCH_DIRP();
 
 	if (!(dirp->flags & PHP_STREAM_FLAG_IS_DIR)) {
-		php_error_docref(NULL, E_WARNING, "%d is not a valid Directory resource", dirp->res->handle);
-		RETURN_FALSE;
+		zend_type_error("%d is not a valid Directory resource", dirp->res->handle);
+		RETURN_THROWS();
 	}
 
 	php_stream_rewinddir(dirp);
 }
 /* }}} */
 
-/* {{{ proto string readdir([resource dir_handle])
+/* {{{ proto string|false readdir([resource dir_handle])
    Read directory entry from dir_handle */
-PHP_NAMED_FUNCTION(php_if_readdir)
+PHP_FUNCTION(readdir)
 {
 	zval *id = NULL, *tmp, *myself;
 	php_stream *dirp;
@@ -401,8 +394,8 @@ PHP_NAMED_FUNCTION(php_if_readdir)
 	FETCH_DIRP();
 
 	if (!(dirp->flags & PHP_STREAM_FLAG_IS_DIR)) {
-		php_error_docref(NULL, E_WARNING, "%d is not a valid Directory resource", dirp->res->handle);
-		RETURN_FALSE;
+		zend_type_error("%d is not a valid Directory resource", dirp->res->handle);
+		RETURN_THROWS();
 	}
 
 	if (php_stream_readdir(dirp, &entry)) {
@@ -413,7 +406,7 @@ PHP_NAMED_FUNCTION(php_if_readdir)
 /* }}} */
 
 #ifdef HAVE_GLOB
-/* {{{ proto array glob(string pattern [, int flags])
+/* {{{ proto array|false glob(string pattern [, int flags])
    Find pathnames matching a pattern */
 PHP_FUNCTION(glob)
 {
@@ -546,7 +539,7 @@ no_results:
 /* }}} */
 #endif
 
-/* {{{ proto array scandir(string dir [, int sorting_order [, resource context]])
+/* {{{ proto array|false scandir(string dir [, int sorting_order [, resource context]])
    List files & directories inside the specified path */
 PHP_FUNCTION(scandir)
 {
@@ -566,8 +559,8 @@ PHP_FUNCTION(scandir)
 	ZEND_PARSE_PARAMETERS_END();
 
 	if (dirn_len < 1) {
-		php_error_docref(NULL, E_WARNING, "Directory name cannot be empty");
-		RETURN_FALSE;
+		zend_value_error("Directory name cannot be empty");
+		RETURN_THROWS();
 	}
 
 	if (zcontext) {

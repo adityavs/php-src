@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -50,7 +48,7 @@ int dom_documenttype_name_read(dom_object *obj, zval *retval)
 		return FAILURE;
 	}
 
-	ZVAL_STRING(retval, (char *) (dtdptr->name));
+	ZVAL_STRING(retval, dtdptr->name ? (char *) (dtdptr->name) : "");
 
 	return SUCCESS;
 }
@@ -73,7 +71,7 @@ int dom_documenttype_entities_read(dom_object *obj, zval *retval)
 		return FAILURE;
 	}
 
-	php_dom_create_interator(retval, DOM_NAMEDNODEMAP);
+	php_dom_create_iterator(retval, DOM_NAMEDNODEMAP);
 
 	entityht = (xmlHashTable *) doctypep->entities;
 
@@ -101,7 +99,7 @@ int dom_documenttype_notations_read(dom_object *obj, zval *retval)
 		return FAILURE;
 	}
 
-	php_dom_create_interator(retval, DOM_NAMEDNODEMAP);
+	php_dom_create_iterator(retval, DOM_NAMEDNODEMAP);
 
 	notationht = (xmlHashTable *) doctypep->notations;
 

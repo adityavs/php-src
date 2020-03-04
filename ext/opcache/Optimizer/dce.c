@@ -124,6 +124,7 @@ static inline zend_bool may_have_side_effects(
 		case ZEND_IN_ARRAY:
 		case ZEND_FUNC_NUM_ARGS:
 		case ZEND_FUNC_GET_ARGS:
+		case ZEND_ARRAY_KEY_EXISTS:
 			/* No side effects */
 			return 0;
 		case ZEND_ROPE_END:
@@ -201,21 +202,9 @@ static inline zend_bool may_have_side_effects(
 		case ZEND_PRE_DEC:
 		case ZEND_POST_DEC:
 			return is_bad_mod(ssa, ssa_op->op1_use, ssa_op->op1_def);
-		case ZEND_ASSIGN_ADD:
-		case ZEND_ASSIGN_SUB:
-		case ZEND_ASSIGN_MUL:
-		case ZEND_ASSIGN_DIV:
-		case ZEND_ASSIGN_MOD:
-		case ZEND_ASSIGN_SL:
-		case ZEND_ASSIGN_SR:
-		case ZEND_ASSIGN_CONCAT:
-		case ZEND_ASSIGN_BW_OR:
-		case ZEND_ASSIGN_BW_AND:
-		case ZEND_ASSIGN_BW_XOR:
-		case ZEND_ASSIGN_POW:
+		case ZEND_ASSIGN_OP:
 			return is_bad_mod(ssa, ssa_op->op1_use, ssa_op->op1_def)
-				|| (opline->extended_value
-					&& ssa->vars[ssa_op->op1_def].escape_state != ESCAPE_STATE_NO_ESCAPE);
+				|| ssa->vars[ssa_op->op1_def].escape_state != ESCAPE_STATE_NO_ESCAPE;
 		case ZEND_ASSIGN_DIM:
 		case ZEND_ASSIGN_OBJ:
 			if (is_bad_mod(ssa, ssa_op->op1_use, ssa_op->op1_def)
@@ -253,6 +242,8 @@ static inline zend_bool may_have_side_effects(
 				}
 			}
 			return 0;
+		case ZEND_CHECK_VAR:
+			return (OP1_INFO() & MAY_BE_UNDEF) != 0;
 		default:
 			/* For everything we didn't handle, assume a side-effect */
 			return 1;
@@ -349,18 +340,10 @@ static zend_bool try_remove_var_def(context *ctx, int free_var, int use_chain, z
 				case ZEND_ASSIGN_OBJ_REF:
 				case ZEND_ASSIGN_STATIC_PROP:
 				case ZEND_ASSIGN_STATIC_PROP_REF:
-				case ZEND_ASSIGN_ADD:
-				case ZEND_ASSIGN_SUB:
-				case ZEND_ASSIGN_MUL:
-				case ZEND_ASSIGN_DIV:
-				case ZEND_ASSIGN_MOD:
-				case ZEND_ASSIGN_SL:
-				case ZEND_ASSIGN_SR:
-				case ZEND_ASSIGN_CONCAT:
-				case ZEND_ASSIGN_BW_OR:
-				case ZEND_ASSIGN_BW_AND:
-				case ZEND_ASSIGN_BW_XOR:
-				case ZEND_ASSIGN_POW:
+				case ZEND_ASSIGN_OP:
+				case ZEND_ASSIGN_DIM_OP:
+				case ZEND_ASSIGN_OBJ_OP:
+				case ZEND_ASSIGN_STATIC_PROP_OP:
 				case ZEND_PRE_INC:
 				case ZEND_PRE_DEC:
 				case ZEND_PRE_INC_OBJ:
@@ -433,7 +416,7 @@ static zend_bool dce_instr(context *ctx, zend_op *opline, zend_ssa_op *ssa_op) {
 
 	if (free_var >= 0) {
 		opline->opcode = ZEND_FREE;
-		opline->op1.var = (uintptr_t) ZEND_CALL_VAR_NUM(NULL, ssa->vars[free_var].var);
+		opline->op1.var = EX_NUM_TO_VAR(ssa->vars[free_var].var);
 		opline->op1_type = free_var_type;
 
 		ssa_op->op1_use = free_var;

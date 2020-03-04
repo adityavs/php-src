@@ -1,5 +1,3 @@
-dnl config.m4 for extension imap
-
 AC_DEFUN([IMAP_INC_CHK],[if test -r "$i$1/c-client.h"; then
     AC_DEFINE(HAVE_IMAP2000, 1, [ ])
     IMAP_DIR=$i
@@ -75,7 +73,7 @@ AC_DEFUN([PHP_IMAP_SSL_CHK], [
     ], [
       AC_MSG_ERROR([OpenSSL libraries not found.
 
-      Check the path given to --with-openssl-dir and output in config.log)
+      Check whether openssl is on your PKG_CONFIG_PATH and the output in config.log)
       ])
     ])
   elif test -f "$IMAP_INC_DIR/linkage.c"; then
@@ -102,8 +100,8 @@ PHP_ARG_WITH([kerberos],
 
 PHP_ARG_WITH([imap-ssl],
   [for IMAP SSL support],
-  [AS_HELP_STRING([[--with-imap-ssl[=DIR]]],
-    [IMAP: Include SSL support. DIR is the OpenSSL install prefix])],
+  [AS_HELP_STRING([[--with-imap-ssl]],
+    [IMAP: Include SSL support])],
   [no],
   [no])
 

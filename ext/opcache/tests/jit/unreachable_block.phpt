@@ -7,7 +7,7 @@ opcache.file_update_protection=0
 opcache.jit_buffer_size=1M
 opcache.protect_memory=1
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
 class A {
@@ -15,7 +15,7 @@ class A {
     {
         switch ($this->returnType) {
             case 'float':  return $this->returnTypeNullable ? null : 0;
-            default: return; 
+            default: return;
         }
     }
 }

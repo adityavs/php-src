@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -178,7 +176,7 @@ static int php_disk_total_space(char *path, double *space) /* {{{ */
 /* }}} */
 /* }}} */
 
-/* {{{ proto float disk_total_space(string path)
+/* {{{ proto float|false disk_total_space(string path)
    Get total disk space for filesystem that path is on */
 PHP_FUNCTION(disk_total_space)
 {
@@ -217,8 +215,7 @@ static int php_disk_free_space(char *path, double *space) /* {{{ */
 		return FAILURE;
 	}
 
-	/* i know - this is ugly, but i works <thies@thieso.net> */
-	*space = FreeBytesAvailableToCaller.HighPart * (double) (((zend_ulong)1) << 31) * 2.0 + FreeBytesAvailableToCaller.LowPart;
+	*space = FreeBytesAvailableToCaller.HighPart * (double) (1ULL << 32)  + FreeBytesAvailableToCaller.LowPart;
 
 	PHP_WIN32_IOUTIL_CLEANUP_W()
 
@@ -273,7 +270,7 @@ static int php_disk_free_space(char *path, double *space) /* {{{ */
 /* }}} */
 /* }}} */
 
-/* {{{ proto float disk_free_space(string path)
+/* {{{ proto float|false disk_free_space(string path)
    Get free disk space for filesystem that path is on */
 PHP_FUNCTION(disk_free_space)
 {
@@ -342,7 +339,7 @@ static void php_do_chgrp(INTERNAL_FUNCTION_PARAMETERS, int do_lchgrp) /* {{{ */
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_PATH(filename, filename_len)
 		Z_PARAM_ZVAL(group)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	wrapper = php_stream_locate_url_wrapper(filename, NULL, 0);
 	if(wrapper != &php_plain_files_wrapper || strncasecmp("file://", filename, 7) == 0) {
@@ -356,8 +353,8 @@ static void php_do_chgrp(INTERNAL_FUNCTION_PARAMETERS, int do_lchgrp) /* {{{ */
 				option = PHP_STREAM_META_GROUP_NAME;
 				value = Z_STRVAL_P(group);
 			} else {
-				php_error_docref(NULL, E_WARNING, "parameter 2 should be string or int, %s given", zend_zval_type_name(group));
-				RETURN_FALSE;
+				zend_type_error("chgrp(): Argument #2 ($group) must be of type string|int, %s given", zend_zval_type_name(group));
+				RETURN_THROWS();
 			}
 			if(wrapper->wops->stream_metadata(wrapper, filename, option, value, NULL)) {
 				RETURN_TRUE;
@@ -385,8 +382,8 @@ static void php_do_chgrp(INTERNAL_FUNCTION_PARAMETERS, int do_lchgrp) /* {{{ */
 			RETURN_FALSE;
 		}
 	} else {
-		php_error_docref(NULL, E_WARNING, "parameter 2 should be string or int, %s given", zend_zval_type_name(group));
-		RETURN_FALSE;
+		zend_type_error("chgrp(): Argument #2 ($group) must be of type string|int, %s given", zend_zval_type_name(group));
+		RETURN_THROWS();
 	}
 
 	/* Check the basedir */
@@ -492,7 +489,7 @@ static void php_do_chown(INTERNAL_FUNCTION_PARAMETERS, int do_lchown) /* {{{ */
 				option = PHP_STREAM_META_OWNER_NAME;
 				value = Z_STRVAL_P(user);
 			} else {
-				php_error_docref(NULL, E_WARNING, "parameter 2 should be string or int, %s given", zend_zval_type_name(user));
+				php_error_docref(NULL, E_WARNING, "Parameter 2 should be string or int, %s given", zend_zval_type_name(user));
 				RETURN_FALSE;
 			}
 			if(wrapper->wops->stream_metadata(wrapper, filename, option, value, NULL)) {
@@ -522,7 +519,7 @@ static void php_do_chown(INTERNAL_FUNCTION_PARAMETERS, int do_lchown) /* {{{ */
 			RETURN_FALSE;
 		}
 	} else {
-		php_error_docref(NULL, E_WARNING, "parameter 2 should be string or int, %s given", zend_zval_type_name(user));
+		php_error_docref(NULL, E_WARNING, "Parameter 2 should be string or int, %s given", zend_zval_type_name(user));
 		RETURN_FALSE;
 	}
 
@@ -1077,21 +1074,20 @@ FileFunction(PHP_FN(file_exists), FS_EXISTS)
 
 /* {{{ proto array lstat(string filename)
    Give information about a file or symbolic link */
-FileFunction(php_if_lstat, FS_LSTAT)
+FileFunction(PHP_FN(lstat), FS_LSTAT)
 /* }}} */
 
 /* {{{ proto array stat(string filename)
    Give information about a file */
-FileFunction(php_if_stat, FS_STAT)
+FileFunction(PHP_FN(stat), FS_STAT)
 /* }}} */
 
 /* {{{ proto bool realpath_cache_size()
    Get current size of realpath cache */
 PHP_FUNCTION(realpath_cache_size)
 {
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
+
 	RETURN_LONG(realpath_cache_size());
 }
 
@@ -1101,9 +1097,7 @@ PHP_FUNCTION(realpath_cache_get)
 {
 	realpath_cache_bucket **buckets = realpath_cache_get_buckets(), **end = buckets + realpath_cache_max_buckets();
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		return;
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	array_init(return_value);
 	while(buckets < end) {

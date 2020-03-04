@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -74,17 +72,7 @@ static void php_filter_encode_url(zval *value, const unsigned char* chars, const
 	while (s < e) {
 		tmp[*s++] = '\0';
 	}
-/* XXX: This is not needed since these chars in the allowed list never include the high/low/null value
-	if (encode_nul) {
-		tmp[0] = 1;
-	}
-	if (high) {
-		memset(tmp + 127, 1, sizeof(tmp) - 127);
-	}
-	if (low) {
-		memset(tmp, 1, 32);
-	}
-*/
+
 	str = zend_string_safe_alloc(Z_STRLEN_P(value), 3, 0, 0);
 	p = (unsigned char *) ZSTR_VAL(str);
 	s = (unsigned char *) Z_STRVAL_P(value);
@@ -206,7 +194,7 @@ void php_filter_string(PHP_INPUT_FILTER_PARAM_DECL)
 	php_filter_encode_html(value, enc);
 
 	/* strip tags, implicitly also removes \0 chars */
-	new_len = php_strip_tags_ex(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, NULL, 0, 1);
+	new_len = php_strip_tags_ex(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, 0, 1);
 	Z_STRLEN_P(value) = new_len;
 
 	if (new_len == 0) {
@@ -369,12 +357,7 @@ void php_filter_number_float(PHP_INPUT_FILTER_PARAM_DECL)
 /* {{{ php_filter_add_slashes */
 void php_filter_add_slashes(PHP_INPUT_FILTER_PARAM_DECL)
 {
-	/* This filter is used by both 'add_slashes' & 'magic_quotes' (legacy) */
-
-	zend_string *buf;
-
-	/* just call php_addslashes quotes */
-	buf = php_addslashes(Z_STR_P(value));
+	zend_string *buf = php_addslashes(Z_STR_P(value));
 
 	zval_ptr_dtor(value);
 	ZVAL_STR(value, buf);

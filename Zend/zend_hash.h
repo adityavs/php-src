@@ -264,9 +264,11 @@ ZEND_API void  ZEND_FASTCALL zend_hash_merge_ex(HashTable *target, HashTable *so
 ZEND_API void  zend_hash_bucket_swap(Bucket *p, Bucket *q);
 ZEND_API void  zend_hash_bucket_renum_swap(Bucket *p, Bucket *q);
 ZEND_API void  zend_hash_bucket_packed_swap(Bucket *p, Bucket *q);
+
+typedef int (*bucket_compare_func_t)(Bucket *a, Bucket *b);
 ZEND_API int   zend_hash_compare(HashTable *ht1, HashTable *ht2, compare_func_t compar, zend_bool ordered);
-ZEND_API void  ZEND_FASTCALL zend_hash_sort_ex(HashTable *ht, sort_func_t sort_func, compare_func_t compare_func, zend_bool renumber);
-ZEND_API zval* ZEND_FASTCALL zend_hash_minmax(const HashTable *ht, compare_func_t compar, uint32_t flag);
+ZEND_API void  ZEND_FASTCALL zend_hash_sort_ex(HashTable *ht, sort_func_t sort_func, bucket_compare_func_t compare_func, zend_bool renumber);
+ZEND_API zval* ZEND_FASTCALL zend_hash_minmax(const HashTable *ht, bucket_compare_func_t compar, uint32_t flag);
 
 #define zend_hash_sort(ht, compare_func, renumber) \
 	zend_hash_sort_ex(ht, zend_sort, compare_func, renumber)
@@ -277,7 +279,7 @@ ZEND_API zval* ZEND_FASTCALL zend_hash_minmax(const HashTable *ht, compare_func_
 #define zend_hash_next_free_element(ht) \
 	(ht)->nNextFreeElement
 
-ZEND_API int ZEND_FASTCALL zend_hash_rehash(HashTable *ht);
+ZEND_API void ZEND_FASTCALL zend_hash_rehash(HashTable *ht);
 
 #if !ZEND_DEBUG && defined(HAVE_BUILTIN_CONSTANT_P)
 # define zend_new_array(size) \
@@ -297,6 +299,7 @@ ZEND_API int ZEND_FASTCALL zend_hash_rehash(HashTable *ht);
 
 ZEND_API HashTable* ZEND_FASTCALL _zend_new_array_0(void);
 ZEND_API HashTable* ZEND_FASTCALL _zend_new_array(uint32_t size);
+ZEND_API HashTable* ZEND_FASTCALL zend_new_pair(zval *val1, zval *val2);
 ZEND_API uint32_t zend_array_count(HashTable *ht);
 ZEND_API HashTable* ZEND_FASTCALL zend_array_dup(HashTable *source);
 ZEND_API void ZEND_FASTCALL zend_array_destroy(HashTable *ht);
@@ -1076,12 +1079,37 @@ static zend_always_inline void *zend_hash_get_current_data_ptr_ex(HashTable *ht,
 		uint32_t __fill_idx = __fill_ht->nNumUsed; \
 		ZEND_ASSERT(HT_FLAGS(__fill_ht) & HASH_FLAG_PACKED);
 
-#define ZEND_HASH_FILL_ADD(_val) do { \
-		ZVAL_COPY_VALUE(&__fill_bkt->val, _val); \
+#define ZEND_HASH_FILL_SET(_val) \
+		ZVAL_COPY_VALUE(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_SET_NULL() \
+		ZVAL_NULL(&__fill_bkt->val)
+
+#define ZEND_HASH_FILL_SET_LONG(_val) \
+		ZVAL_LONG(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_SET_DOUBLE(_val) \
+		ZVAL_DOUBLE(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_SET_STR(_val) \
+		ZVAL_STR(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_SET_STR_COPY(_val) \
+		ZVAL_STR_COPY(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_SET_INTERNED_STR(_val) \
+		ZVAL_INTERNED_STR(&__fill_bkt->val, _val)
+
+#define ZEND_HASH_FILL_NEXT() do {\
 		__fill_bkt->h = (__fill_idx); \
 		__fill_bkt->key = NULL; \
 		__fill_bkt++; \
 		__fill_idx++; \
+	} while (0)
+
+#define ZEND_HASH_FILL_ADD(_val) do { \
+		ZEND_HASH_FILL_SET(_val); \
+		ZEND_HASH_FILL_NEXT(); \
 	} while (0)
 
 #define ZEND_HASH_FILL_END() \

@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -39,6 +37,7 @@ typedef void OnigMatchParam;
 #define onig_new_match_param() (NULL)
 #define onig_initialize_match_param(x) (void)(x)
 #define onig_set_match_stack_limit_size_of_match_param(x, y)
+#define onig_set_retry_limit_in_match_of_match_param(x, y)
 #define onig_free_match_param(x)
 #define onig_search_with_param(reg, str, end, start, range, region, option, mp) \
 		onig_search(reg, str, end, start, range, region, option)
@@ -155,6 +154,7 @@ PHP_RSHUTDOWN_FUNCTION(mb_regex)
 		ZVAL_UNDEF(&MBREX(search_str));
 	}
 	MBREX(search_pos) = 0;
+	MBREX(search_re) = NULL;
 
 	if (MBREX(search_regs) != NULL) {
 		onig_region_free(MBREX(search_regs), 1);
@@ -840,7 +840,7 @@ PHP_FUNCTION(mb_regex_encoding)
 	OnigEncoding mbctype;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s", &encoding, &encoding_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (!encoding) {
@@ -874,6 +874,9 @@ static int _php_mb_onig_search(regex_t* reg, const OnigUChar* str, const OnigUCh
 	if (!ZEND_LONG_UINT_OVFL(MBSTRG(regex_stack_limit))) {
 		onig_set_match_stack_limit_size_of_match_param(mp, (unsigned int)MBSTRG(regex_stack_limit));
 	}
+	if (!ZEND_LONG_UINT_OVFL(MBSTRG(regex_retry_limit))) {
+		onig_set_retry_limit_in_match_of_match_param(mp, (unsigned int)MBSTRG(regex_retry_limit));
+	}
 	/* search */
 	err = onig_search_with_param(reg, str, end, start, range, region, option, mp);
 	onig_free_match_param(mp);
@@ -895,13 +898,13 @@ static void _php_mb_regex_ereg_exec(INTERNAL_FUNCTION_PARAMETERS, int icase)
 	char *str;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|z", &arg_pattern, &arg_pattern_len, &string, &string_len, &array) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if (array != NULL) {
 		array = zend_try_array_init(array);
 		if (!array) {
-			return;
+			RETURN_THROWS();
 		}
 	}
 
@@ -919,7 +922,7 @@ static void _php_mb_regex_ereg_exec(INTERNAL_FUNCTION_PARAMETERS, int icase)
 	}
 
 	if (arg_pattern_len == 0) {
-		php_error_docref(NULL, E_WARNING, "empty pattern");
+		php_error_docref(NULL, E_WARNING, "Empty pattern");
 		RETVAL_FALSE;
 		goto out;
 	}
@@ -1034,7 +1037,7 @@ static void _php_mb_regex_ereg_replace_exec(INTERNAL_FUNCTION_PARAMETERS, OnigOp
 						&replace, &replace_len,
 						&string, &string_len,
 						&option_str, &option_str_len) == FAILURE) {
-				RETURN_FALSE;
+				RETURN_THROWS();
 			}
 		} else {
 			if (zend_parse_parameters(ZEND_NUM_ARGS(), "sfs|s",
@@ -1042,7 +1045,7 @@ static void _php_mb_regex_ereg_replace_exec(INTERNAL_FUNCTION_PARAMETERS, OnigOp
 						&arg_replace_fci, &arg_replace_fci_cache,
 						&string, &string_len,
 						&option_str, &option_str_len) == FAILURE) {
-				RETURN_FALSE;
+				RETURN_THROWS();
 			}
 		}
 
@@ -1124,7 +1127,7 @@ static void _php_mb_regex_ereg_replace_exec(INTERNAL_FUNCTION_PARAMETERS, OnigOp
 				if (zend_eval_stringl(ZSTR_VAL(eval_str), ZSTR_LEN(eval_str), &v, description) == FAILURE) {
 					efree(description);
 					zend_throw_error(NULL, "Failed evaluating code: %s%s", PHP_EOL, ZSTR_VAL(eval_str));
-					onig_region_free(regs, 0);
+					onig_region_free(regs, 1);
 					smart_str_free(&out_buf);
 					smart_str_free(&eval_buf);
 					RETURN_FALSE;
@@ -1249,7 +1252,7 @@ PHP_FUNCTION(mb_split)
 	zend_long count = -1;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &arg_pattern, &arg_pattern_len, &string, &string_len, &count) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	if (count > 0) {
@@ -1340,7 +1343,7 @@ PHP_FUNCTION(mb_ereg_match)
 		if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|s",
 		                          &arg_pattern, &arg_pattern_len, &string, &string_len,
 		                          &option_str, &option_str_len)==FAILURE) {
-			RETURN_FALSE;
+			RETURN_THROWS();
 		}
 
 		if (option_str != NULL) {
@@ -1362,8 +1365,11 @@ PHP_FUNCTION(mb_ereg_match)
 
 	mp = onig_new_match_param();
 	onig_initialize_match_param(mp);
-	if(MBSTRG(regex_stack_limit) > 0 && MBSTRG(regex_stack_limit) < UINT_MAX) {
+	if (MBSTRG(regex_stack_limit) > 0 && MBSTRG(regex_stack_limit) < UINT_MAX) {
 		onig_set_match_stack_limit_size_of_match_param(mp, (unsigned int)MBSTRG(regex_stack_limit));
+	}
+	if (MBSTRG(regex_retry_limit) > 0 && MBSTRG(regex_retry_limit) < UINT_MAX) {
+		onig_set_retry_limit_in_match_of_match_param(mp, (unsigned int)MBSTRG(regex_retry_limit));
 	}
 	/* match */
 	err = onig_match_with_param(re, (OnigUChar *)string, (OnigUChar *)(string + string_len), (OnigUChar *)string, NULL, 0, mp);
@@ -1384,13 +1390,15 @@ _php_mb_regex_ereg_search_exec(INTERNAL_FUNCTION_PARAMETERS, int mode)
 	char *arg_pattern = NULL, *arg_options = NULL;
 	size_t arg_pattern_len, arg_options_len;
 	int err;
-	size_t n, i, pos, len, beg, end;
+	size_t n, i, pos, len;
+	/* Stored as int* in the OnigRegion struct */
+	int beg, end;
 	OnigOptionType option;
 	OnigUChar *str;
 	OnigSyntaxType *syntax;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|ss", &arg_pattern, &arg_pattern_len, &arg_options, &arg_options_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	option = MBREX(regex_default_options);
@@ -1398,6 +1406,11 @@ _php_mb_regex_ereg_search_exec(INTERNAL_FUNCTION_PARAMETERS, int mode)
 	if (arg_options) {
 		option = 0;
 		_php_mb_regex_init_options(arg_options, arg_options_len, &option, &syntax, NULL);
+	}
+
+	if (MBREX(search_regs)) {
+		onig_region_free(MBREX(search_regs), 1);
+		MBREX(search_regs) = NULL;
 	}
 
 	if (arg_pattern) {
@@ -1425,9 +1438,6 @@ _php_mb_regex_ereg_search_exec(INTERNAL_FUNCTION_PARAMETERS, int mode)
 		RETURN_FALSE;
 	}
 
-	if (MBREX(search_regs)) {
-		onig_region_free(MBREX(search_regs), 1);
-	}
 	MBREX(search_regs) = onig_region_new();
 
 	err = _php_mb_onig_search(MBREX(search_re), str, str + len, str + pos, str  + len, MBREX(search_regs), 0);
@@ -1525,7 +1535,7 @@ PHP_FUNCTION(mb_ereg_search_init)
 	OnigOptionType option;
 
 	if (zend_parse_parameters(argc, "S|ss", &arg_str, &arg_pattern, &arg_pattern_len, &arg_options, &arg_options_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (argc > 1 && arg_pattern_len == 0) {
@@ -1577,8 +1587,14 @@ PHP_FUNCTION(mb_ereg_search_init)
    Get matched substring of the last time */
 PHP_FUNCTION(mb_ereg_search_getregs)
 {
-	size_t n, i, len, beg, end;
+	size_t n, i, len;
+	/* Stored as int* in the OnigRegion struct */
+	int beg, end;
 	OnigUChar *str;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
 
 	if (MBREX(search_regs) != NULL && Z_TYPE(MBREX(search_str)) == IS_STRING) {
 		array_init(return_value);
@@ -1614,6 +1630,10 @@ PHP_FUNCTION(mb_ereg_search_getregs)
    Get search start position */
 PHP_FUNCTION(mb_ereg_search_getpos)
 {
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	RETVAL_LONG(MBREX(search_pos));
 }
 /* }}} */
@@ -1625,7 +1645,7 @@ PHP_FUNCTION(mb_ereg_search_setpos)
 	zend_long position;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &position) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	/* Accept negative position if length of search string can be determined */
@@ -1670,7 +1690,7 @@ PHP_FUNCTION(mb_regex_set_options)
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s",
 	                          &string, &string_len) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 	if (string != NULL) {
 		opt = 0;

@@ -17,7 +17,7 @@ try {
 }
 chdir(__DIR__);
 file_put_contents($fname, "blah\n");
-file_put_contents("foob", "test\n");
+file_put_contents("fopen_edgecases2.txt", "test\n");
 $a = fopen($fname, 'rb');
 echo fread($a, 1000);
 fclose($a);
@@ -25,7 +25,7 @@ unlink($fname);
 mkdir($pname . '/oops');
 file_put_contents($pname . '/foo/hi', '<?php
 $context = stream_context_create();
-$a = fopen("foob", "rb", false, $context);
+$a = fopen("fopen_edgecases2.txt", "rb", false, $context);
 echo fread($a, 1000);
 fclose($a);
 fopen("../oops", "r");
@@ -33,15 +33,13 @@ fopen("../oops", "r");
 ');
 include $pname . '/foo/hi';
 ?>
-===DONE===
 --CLEAN--
 <?php unlink(__DIR__ . '/' . basename(__FILE__, '.clean.php') . '.phar.php'); ?>
 <?php rmdir(__DIR__ . '/poo'); ?>
-<?php unlink(__DIR__ . '/foob'); ?>
+<?php unlink(__DIR__ . '/fopen_edgecases2.txt'); ?>
 --EXPECTF--
-fopen() expects parameter 1 to be a valid path, array given
+fopen(): Argument #1 ($filename) must be a valid path, array given
 blah
 test
 
-Warning: fopen(phar://%sfopen_edgecases2.phar.php/oops): failed to open stream: phar error: path "oops" is a directory in phar://%sfopen_edgecases2.phar.php/foo/hi on line %d
-===DONE===
+Warning: fopen(phar://%sfopen_edgecases2.phar.php/oops): Failed to open stream: phar error: path "oops" is a directory in phar://%sfopen_edgecases2.phar.php/foo/hi on line %d

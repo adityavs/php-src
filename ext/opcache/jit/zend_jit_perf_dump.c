@@ -24,10 +24,13 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 
-#if defined(__FreeBSD__)
-#include <sys/thr.h>
+#if defined(__darwin__)
+# include <pthread.h>
+#elif defined(__FreeBSD__)
+# include <sys/thr.h>
+# include <sys/sysctl.h>
 #elif defined(__NetBSD__)
-#include <lwp.h>
+# include <lwp.h>
 #endif
 
 #include "zend_elf.h"
@@ -111,7 +114,21 @@ static void zend_jit_perf_jitdump_open(void)
 		return;
 	}
 
+#if defined(__linux__)
 	fd = open("/proc/self/exe", O_RDONLY);
+#elif defined(__NetBSD__)
+	fd = open("/proc/curproc/exe", O_RDONLY);
+#elif defined(__FreeBSD__)
+	char path[PATH_MAX];
+	size_t pathlen = sizeof(path);
+	int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+	if (sysctl(mib, 4, path, &pathlen, NULL, 0) == -1) {
+             return;
+	}
+	fd = open(path, O_RDONLY);
+#else
+	fd = -1;
+#endif
 	if (fd < 0) {
 		return;
 	}
@@ -177,9 +194,13 @@ static void zend_jit_perf_jitdump_register(const char *name, void *start, size_t
 		static uint64_t id = 1;
 		zend_perf_jitdump_load_record rec;
 		size_t len = strlen(name);
-		uint32_t thread_id;
+		uint32_t thread_id = 0;
 #if defined(__linux__)
 		thread_id = syscall(SYS_gettid);
+#elif defined(__darwin__)
+		uint64_t thread_id_u64;
+		pthread_threadid_np(NULL, &thread_id_u64);
+		thread_id = (uint32_t) thread_id_u64;
 #elif defined(__FreeBSD__)
 		long tid;
 		thr_self(&tid);

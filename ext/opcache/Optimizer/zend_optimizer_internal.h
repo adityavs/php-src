@@ -31,7 +31,7 @@
 #define ZEND_OP2_JMP_ADDR(opline)		OP_JMP_ADDR(opline, (opline)->op2)
 
 #define VAR_NUM(v) EX_VAR_TO_NUM(v)
-#define NUM_VAR(v) ((uint32_t)(zend_uintptr_t)ZEND_CALL_VAR_NUM(0, v))
+#define NUM_VAR(v) EX_NUM_TO_VAR(v)
 
 #define INV_COND(op)       ((op) == ZEND_JMPZ    ? ZEND_JMPNZ    : ZEND_JMPZ)
 #define INV_EX_COND(op)    ((op) == ZEND_JMPZ_EX ? ZEND_JMPNZ    : ZEND_JMPZ)
@@ -71,6 +71,11 @@ typedef struct _zend_optimizer_ctx {
 		target = src; \
 	} while (0)
 
+static inline zend_bool zend_optimizer_is_loop_var_free(const zend_op *opline) {
+	return (opline->opcode == ZEND_FE_FREE && opline->extended_value != ZEND_FREE_ON_RETURN)
+		|| (opline->opcode == ZEND_FREE && opline->extended_value == ZEND_FREE_SWITCH);
+}
+
 int  zend_optimizer_add_literal(zend_op_array *op_array, zval *zv);
 int  zend_optimizer_get_persistent_constant(zend_string *name, zval *result, int copy);
 void zend_optimizer_collect_constant(zend_optimizer_ctx *ctx, zval *name, zval* value);
@@ -93,7 +98,6 @@ int  zend_optimizer_replace_by_const(zend_op_array *op_array,
 zend_op *zend_optimizer_get_loop_var_def(const zend_op_array *op_array, zend_op *free_opline);
 
 void zend_optimizer_pass1(zend_op_array *op_array, zend_optimizer_ctx *ctx);
-void zend_optimizer_pass2(zend_op_array *op_array);
 void zend_optimizer_pass3(zend_op_array *op_array, zend_optimizer_ctx *ctx);
 void zend_optimize_func_calls(zend_op_array *op_array, zend_optimizer_ctx *ctx);
 void zend_optimize_cfg(zend_op_array *op_array, zend_optimizer_ctx *ctx);
@@ -106,11 +110,10 @@ void zend_optimizer_compact_literals(zend_op_array *op_array, zend_optimizer_ctx
 void zend_optimizer_compact_vars(zend_op_array *op_array);
 int zend_optimizer_is_disabled_func(const char *name, size_t len);
 zend_function *zend_optimizer_get_called_func(
-		zend_script *script, zend_op_array *op_array, zend_op *opline, zend_bool rt_constants);
+		zend_script *script, zend_op_array *op_array, zend_op *opline);
 uint32_t zend_optimizer_classify_function(zend_string *name, uint32_t num_args);
 void zend_optimizer_migrate_jump(zend_op_array *op_array, zend_op *new_opline, zend_op *opline);
 void zend_optimizer_shift_jump(zend_op_array *op_array, zend_op *opline, uint32_t *shiftlist);
-zend_uchar zend_compound_assign_to_binary_op(zend_uchar opcode);
 int sccp_optimize_op_array(zend_optimizer_ctx *ctx, zend_op_array *op_arrya, zend_ssa *ssa, zend_call_info **call_map);
 int dce_optimize_op_array(zend_op_array *op_array, zend_ssa *ssa, zend_bool reorder_dtor_effects);
 int zend_ssa_escape_analysis(const zend_script *script, zend_op_array *op_array, zend_ssa *ssa);

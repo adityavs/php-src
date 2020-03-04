@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -48,6 +46,7 @@ PHP_METHOD(DateTime, __construct);
 PHP_METHOD(DateTime, __wakeup);
 PHP_METHOD(DateTime, __set_state);
 PHP_METHOD(DateTime, createFromImmutable);
+PHP_METHOD(DateTime, createFromInterface);
 PHP_FUNCTION(date_create);
 PHP_FUNCTION(date_create_immutable);
 PHP_FUNCTION(date_create_from_format);
@@ -81,6 +80,7 @@ PHP_METHOD(DateTimeImmutable, setDate);
 PHP_METHOD(DateTimeImmutable, setISODate);
 PHP_METHOD(DateTimeImmutable, setTimestamp);
 PHP_METHOD(DateTimeImmutable, createFromMutable);
+PHP_METHOD(DateTimeImmutable, createFromInterface);
 
 PHP_METHOD(DateTimeZone, __construct);
 PHP_METHOD(DateTimeZone, __wakeup);
@@ -196,6 +196,8 @@ ZEND_BEGIN_MODULE_GLOBALS(date)
 ZEND_END_MODULE_GLOBALS(date)
 
 #define DATEG(v) ZEND_MODULE_GLOBALS_ACCESSOR(date, v)
+
+PHPAPI time_t php_time();
 
 /* Backwards compatibility wrapper */
 PHPAPI zend_long php_parse_date(char *string, zend_long *now);

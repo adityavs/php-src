@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -454,7 +452,7 @@ det_charset:
 			}
 		}
 		if (!found) {
-			php_error_docref(NULL, E_WARNING, "charset `%s' not supported, assuming utf-8",
+			php_error_docref(NULL, E_WARNING, "Charset `%s' not supported, assuming utf-8",
 					charset_hint);
 		}
 	}
@@ -493,47 +491,6 @@ static inline size_t php_utf32_utf8(unsigned char *buf, unsigned k)
 	return retval;
 }
 /* }}} */
-
-/* {{{ php_mb2_int_to_char
- * Convert back big endian int representation of sequence of one or two 8-bit code units. */
-static inline size_t php_mb2_int_to_char(unsigned char *buf, unsigned k)
-{
-	assert(k <= 0xFFFFU);
-	/* one or two bytes */
-	if (k <= 0xFFU) { /* 1 */
-		buf[0] = k;
-		return 1U;
-	} else { /* 2 */
-		buf[0] = k >> 8;
-		buf[1] = k & 0xFFU;
-		return 2U;
-	}
-}
-/* }}} */
-
-/* {{{ php_mb3_int_to_char
- * Convert back big endian int representation of sequence of one to three 8-bit code units.
- * For EUC-JP. */
-static inline size_t php_mb3_int_to_char(unsigned char *buf, unsigned k)
-{
-	assert(k <= 0xFFFFFFU);
-	/* one to three bytes */
-	if (k <= 0xFFU) { /* 1 */
-		buf[0] = k;
-		return 1U;
-	} else if (k <= 0xFFFFU) { /* 2 */
-		buf[0] = k >> 8;
-		buf[1] = k & 0xFFU;
-		return 2U;
-	} else {
-		buf[0] = k >> 16;
-		buf[1] = (k >> 8) & 0xFFU;
-		buf[2] = k & 0xFFU;
-		return 3U;
-	}
-}
-/* }}} */
-
 
 /* {{{ unimap_bsearc_cmp
  * Binary search of unicode code points in unicode <--> charset mapping.
@@ -1069,7 +1026,7 @@ static const entity_ht *unescape_inverse_map(int all, int flags)
  * unicode code points */
 static entity_table_opt determine_entity_table(int all, int doctype)
 {
-	entity_table_opt retval = {NULL};
+	entity_table_opt retval = {0};
 
 	assert(!(doctype == ENT_HTML_DOC_XML1 && all));
 
@@ -1228,7 +1185,7 @@ PHPAPI zend_string *php_escape_html_entities_ex(unsigned char *old, size_t oldle
 
 	if (all) { /* replace with all named entities */
 		if (CHARSET_PARTIAL_SUPPORT(charset)) {
-			php_error_docref0(NULL, E_STRICT, "Only basic entities "
+			php_error_docref(NULL, E_NOTICE, "Only basic entities "
 				"substitution is supported for multi-byte encodings other than UTF-8; "
 				"functionality is equivalent to htmlspecialchars");
 		}

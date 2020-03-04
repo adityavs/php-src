@@ -113,7 +113,7 @@ typedef struct _zend_ssa_var {
 	int                    use_chain;      /* uses of this value, linked through opN_use_chain */
 	zend_ssa_phi          *phi_use_chain;  /* uses of this value in Phi, linked through use_chain */
 	zend_ssa_phi          *sym_use_chain;  /* uses of this value in Pi constraints */
-	unsigned int           no_val : 1;     /* value doesn't mater (used as op1 in ZEND_ASSIGN) */
+	unsigned int           no_val : 1;     /* value doesn't matter (used as op1 in ZEND_ASSIGN) */
 	unsigned int           scc_entry : 1;
 	unsigned int           alias : 2;  /* value may be changed indirectly */
 	unsigned int           escape_state : 2;
@@ -131,12 +131,11 @@ typedef struct _zend_ssa_var_info {
 
 typedef struct _zend_ssa {
 	zend_cfg               cfg;            /* control flow graph             */
-	int                    rt_constants;   /* run-time or compile-time       */
 	int                    vars_count;     /* number of SSA variables        */
+	int                    sccs;           /* number of SCCs                 */
 	zend_ssa_block        *blocks;         /* array of SSA blocks            */
 	zend_ssa_op           *ops;            /* array of SSA instructions      */
 	zend_ssa_var          *vars;           /* use/def chain of SSA variables */
-	int                    sccs;           /* number of SCCs                 */
 	zend_ssa_var_info     *var_info;
 } zend_ssa;
 
@@ -216,10 +215,12 @@ static zend_always_inline zend_bool zend_ssa_is_no_val_use(const zend_op *opline
 	if (opline->opcode == ZEND_ASSIGN || opline->opcode == ZEND_UNSET_CV) {
 		return ssa_op->op1_use == var && ssa_op->op2_use != var;
 	}
-	if (opline->opcode == ZEND_FE_FETCH_R) {
+	if (opline->opcode == ZEND_FE_FETCH_R || opline->opcode == ZEND_FE_FETCH_RW) {
 		return ssa_op->op2_use == var && ssa_op->op1_use != var;
 	}
-	if (ssa_op->result_use == var && opline->opcode != ZEND_ADD_ARRAY_ELEMENT) {
+	if (ssa_op->result_use == var
+			&& opline->opcode != ZEND_ADD_ARRAY_ELEMENT
+			&& opline->opcode != ZEND_ADD_ARRAY_UNPACK) {
 		return ssa_op->op1_use != var && ssa_op->op2_use != var;
 	}
 	return 0;

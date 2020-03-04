@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -939,7 +937,7 @@ static int lsapi_enterLVE( LSAPI_Request * pReq, uid_t uid )
         ret = (*fp_lve_enter)(s_lve, uid, -1, -1, &cookie);
         if ( ret < 0 )
         {
-            lsapi_log("enter LVE (%d) : ressult: %d !\n", uid, ret );
+            lsapi_log("enter LVE (%d) : result: %d !\n", uid, ret );
             LSAPI_perror_r(pReq, "LSAPI: lve_enter() failure, reached resource limit.", NULL );
             lsapi_lve_error( pReq );
             return -1;
@@ -959,7 +957,7 @@ static int lsapi_jailLVE( LSAPI_Request * pReq, uid_t uid, struct passwd * pw )
     ret = (*fp_lve_jail)( pw, error_msg );
     if ( ret < 0 )
     {
-        lsapi_log("LSAPI: LVE jail(%d) ressult: %d, error: %s !\n",
+        lsapi_log("LSAPI: LVE jail(%d) result: %d, error: %s !\n",
                   uid, ret, error_msg );
         LSAPI_perror_r( pReq, "LSAPI: jail() failure.", NULL );
         return -1;
@@ -3172,9 +3170,6 @@ static int lsapi_prefork_server_accept( lsapi_prefork_server * pServer,
 
 #if defined(linux) || defined(__linux) || defined(__linux__) || defined(__gnu_linux__)
         *s_avail_pages = sysconf(_SC_AVPHYS_PAGES);
-//        lsapi_log("Memory total: %zd, free: %zd, free %%%zd\n",
-//                  s_total_pages, *s_avail_pages, *s_avail_pages * 100 / s_total_pages);
-
 #endif
         FD_ZERO( &readfds );
         FD_SET( pServer->m_fd, &readfds );

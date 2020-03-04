@@ -2,12 +2,8 @@
 Test readlink() function: usage variations - invalid filenames
 --CREDITS--
 Dave Kelsey <d_kelsey@uk.ibm.com>
---SKIPIF--
-<?php
-if (substr(PHP_OS, 0, 3) == 'WIN') {
-    die('skip no links on Windows');
-}
-?>
+--CONFLICTS--
+obscure_filename
 --FILE--
 <?php
 /* Prototype: string readlink ( string $path );
@@ -36,8 +32,6 @@ foreach( $filenames as $filename ) {
   var_dump( readlink($filename) );
   clearstatcache();
 }
-
-echo "\n*** Done ***";
 ?>
 --CLEAN--
 <?php
@@ -67,5 +61,3 @@ bool(false)
 
 Warning: readlink(): %s in %s on line %d
 bool(false)
-
-*** Done ***

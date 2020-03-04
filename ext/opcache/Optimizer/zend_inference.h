@@ -26,11 +26,11 @@
 /* Bitmask for type inference (zend_ssa_var_info.type) */
 #include "zend_type_info.h"
 
-#define MAY_BE_IN_REG               (1<<25) /* value allocated in CPU register */
+#define MAY_BE_IN_REG               (1<<29) /* value allocated in CPU register */
 
 //TODO: remome MAY_BE_RC1, MAY_BE_RCN???
-#define MAY_BE_RC1                  (1<<27) /* may be non-reference with refcount == 1 */
-#define MAY_BE_RCN                  (1<<28) /* may be non-reference with refcount > 1  */
+#define MAY_BE_RC1                  (1<<30) /* may be non-reference with refcount == 1 */
+#define MAY_BE_RCN                  (1u<<31) /* may be non-reference with refcount > 1  */
 
 #define MAY_HAVE_DTOR \
 	(MAY_BE_OBJECT|MAY_BE_RESOURCE \
@@ -40,7 +40,7 @@
 	static zend_always_inline zend_bool _ssa_##opN##_has_range(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{ \
 		if (opline->opN##_type == IS_CONST) { \
-			zval *zv = CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants); \
+			zval *zv = CRT_CONSTANT(opline->opN); \
 			return (Z_TYPE_P(zv) == IS_LONG || Z_TYPE_P(zv) == IS_TRUE || Z_TYPE_P(zv) == IS_FALSE || Z_TYPE_P(zv) == IS_NULL); \
 		} else { \
 			return (opline->opN##_type != IS_UNUSED && \
@@ -56,7 +56,7 @@
 	static zend_always_inline zend_long _ssa_##opN##_min_range(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{ \
 		if (opline->opN##_type == IS_CONST) { \
-			zval *zv = CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants); \
+			zval *zv = CRT_CONSTANT(opline->opN); \
 			if (Z_TYPE_P(zv) == IS_LONG) { \
 				return Z_LVAL_P(zv); \
 			} else if (Z_TYPE_P(zv) == IS_TRUE) { \
@@ -80,7 +80,7 @@
 	static zend_always_inline zend_long _ssa_##opN##_max_range(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{ \
 		if (opline->opN##_type == IS_CONST) { \
-			zval *zv = CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants); \
+			zval *zv = CRT_CONSTANT(opline->opN); \
 			if (Z_TYPE_P(zv) == IS_LONG) { \
 				return Z_LVAL_P(zv); \
 			} else if (Z_TYPE_P(zv) == IS_TRUE) { \
@@ -104,7 +104,7 @@
 	static zend_always_inline char _ssa_##opN##_range_underflow(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{ \
 		if (opline->opN##_type == IS_CONST) { \
-			zval *zv = CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants); \
+			zval *zv = CRT_CONSTANT(opline->opN); \
 			if (Z_TYPE_P(zv) == IS_LONG || Z_TYPE_P(zv) == IS_TRUE || Z_TYPE_P(zv) == IS_FALSE || Z_TYPE_P(zv) == IS_NULL) { \
 				return 0; \
 			} \
@@ -122,7 +122,7 @@
 	static zend_always_inline char _ssa_##opN##_range_overflow(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{ \
 		if (opline->opN##_type == IS_CONST) { \
-			zval *zv = CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants); \
+			zval *zv = CRT_CONSTANT(opline->opN); \
 			if (Z_TYPE_P(zv) == IS_LONG || Z_TYPE_P(zv) == IS_TRUE || Z_TYPE_P(zv) == IS_FALSE || Z_TYPE_P(zv) == IS_NULL) { \
 				return 0; \
 			} \
@@ -199,7 +199,7 @@ static zend_always_inline uint32_t get_ssa_var_info(const zend_ssa *ssa, int ssa
 	if (ssa->var_info && ssa_var_num >= 0) {
 		return ssa->var_info[ssa_var_num].type;
 	} else {
-		return MAY_BE_UNDEF | MAY_BE_RC1 | MAY_BE_RCN | MAY_BE_REF | MAY_BE_ANY | MAY_BE_ARRAY_KEY_ANY | MAY_BE_ARRAY_OF_ANY | MAY_BE_ARRAY_OF_REF | MAY_BE_ERROR;
+		return MAY_BE_UNDEF | MAY_BE_RC1 | MAY_BE_RCN | MAY_BE_REF | MAY_BE_ANY | MAY_BE_ARRAY_KEY_ANY | MAY_BE_ARRAY_OF_ANY | MAY_BE_ARRAY_OF_REF;
 	}
 }
 
@@ -207,7 +207,7 @@ static zend_always_inline uint32_t get_ssa_var_info(const zend_ssa *ssa, int ssa
 	static zend_always_inline uint32_t _ssa_##opN##_info(const zend_op_array *op_array, const zend_ssa *ssa, const zend_op *opline) \
 	{																		\
 		if (opline->opN##_type == IS_CONST) {							\
-			return _const_op_type(CRT_CONSTANT_EX(op_array, opline, opline->opN, ssa->rt_constants)); \
+			return _const_op_type(CRT_CONSTANT(opline->opN)); \
 		} else { \
 			return get_ssa_var_info(ssa, ssa->ops ? ssa->ops[opline - op_array->opcodes].opN##_use : -1); \
 		} \
@@ -238,6 +238,14 @@ DEFINE_SSA_OP_DEF_INFO(result)
 #define OP2_DATA_DEF_INFO()     (_ssa_op2_def_info(op_array, ssa, (opline+1)))
 #define RES_INFO()              (_ssa_result_def_info(op_array, ssa, opline))
 
+static zend_always_inline zend_bool zend_add_will_overflow(zend_long a, zend_long b) {
+	return (b > 0 && a > ZEND_LONG_MAX - b)
+		|| (b < 0 && a < ZEND_LONG_MIN - b);
+}
+static zend_always_inline zend_bool zend_sub_will_overflow(zend_long a, zend_long b) {
+	return (b > 0 && a < ZEND_LONG_MIN + b)
+		|| (b < 0 && a > ZEND_LONG_MAX + b);
+}
 
 BEGIN_EXTERN_C()
 
@@ -255,6 +263,8 @@ void zend_inference_check_recursive_dependencies(zend_op_array *op_array);
 
 int  zend_infer_types_ex(const zend_op_array *op_array, const zend_script *script, zend_ssa *ssa, zend_bitset worklist, zend_long optimization_level);
 
+uint32_t zend_fetch_arg_info_type(
+	const zend_script *script, zend_arg_info *arg_info, zend_class_entry **pce);
 void zend_init_func_return_info(const zend_op_array   *op_array,
                                 const zend_script     *script,
                                 zend_ssa_var_info     *ret);
@@ -264,7 +274,7 @@ void zend_func_return_info(const zend_op_array   *op_array,
                            int                    widening,
                            zend_ssa_var_info     *ret);
 
-int zend_may_throw(const zend_op *opline, zend_op_array *op_array, zend_ssa *ssa);
+int zend_may_throw(const zend_op *opline, const zend_op_array *op_array, zend_ssa *ssa);
 
 END_EXTERN_C()
 

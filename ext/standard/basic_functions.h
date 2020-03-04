@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -54,10 +52,10 @@ PHP_FUNCTION(time_sleep_until);
 #endif
 PHP_FUNCTION(flush);
 #ifdef HAVE_INET_NTOP
-PHP_NAMED_FUNCTION(zif_inet_ntop);
+PHP_FUNCTION(inet_ntop);
 #endif
 #ifdef HAVE_INET_PTON
-PHP_NAMED_FUNCTION(php_inet_pton);
+PHP_FUNCTION(inet_pton);
 #endif
 PHP_FUNCTION(ip2long);
 PHP_FUNCTION(long2ip);
@@ -74,8 +72,6 @@ PHP_FUNCTION(set_time_limit);
 PHP_FUNCTION(header_register_callback);
 
 PHP_FUNCTION(get_cfg_var);
-PHP_FUNCTION(get_magic_quotes_runtime);
-PHP_FUNCTION(get_magic_quotes_gpc);
 
 PHP_FUNCTION(error_log);
 PHP_FUNCTION(error_get_last);
@@ -98,7 +94,6 @@ PHP_FUNCTION(ini_set);
 PHP_FUNCTION(ini_restore);
 PHP_FUNCTION(get_include_path);
 PHP_FUNCTION(set_include_path);
-PHP_FUNCTION(restore_include_path);
 
 PHP_FUNCTION(print_r);
 PHP_FUNCTION(fprintf);
@@ -113,7 +108,7 @@ PHP_FUNCTION(getservbyport);
 PHP_FUNCTION(getprotobyname);
 PHP_FUNCTION(getprotobynumber);
 
-PHP_NAMED_FUNCTION(php_if_crc32);
+PHP_FUNCTION(crc32);
 
 PHP_FUNCTION(register_tick_function);
 PHP_FUNCTION(unregister_tick_function);
@@ -221,12 +216,6 @@ typedef struct _php_basic_globals {
 	HashTable url_adapt_session_hosts_ht;
 	url_adapt_state_ex_t url_adapt_output_ex;
 	HashTable url_adapt_output_hosts_ht;
-
-#ifdef HAVE_MMAP
-	void *mmap_file;
-	size_t mmap_len;
-#endif
-
 	HashTable *user_filter_map;
 
 	/* file.c */
@@ -235,6 +224,7 @@ typedef struct _php_basic_globals {
 #endif
 
 	int umask;
+	zend_long unserialize_max_depth;
 } php_basic_globals;
 
 #ifdef ZTS

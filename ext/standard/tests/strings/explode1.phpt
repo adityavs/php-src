@@ -32,15 +32,32 @@ $string = "1234NULL23abcd00000TRUEFALSE-11.234444true-11.24%PHP%ZEND";
  */
 $counter = 1;
 foreach($delimiters as $delimiter) {
-  echo "-- Iteration $counter --\n";
-  var_dump( explode($delimiter, $string, -1) );
-  var_dump( explode($delimiter, $string, 0) );
-  var_dump( explode($delimiter, $string, 1) );
-  var_dump( explode($delimiter, $string, 2) );
-  $counter++;
+    echo "-- Iteration $counter --\n";
+
+    try {
+        var_dump( explode($delimiter, $string, -1) );
+    } catch (\ValueError $e) {
+        echo $e->getMessage() . "\n";
+    }
+    try {
+        var_dump( explode($delimiter, $string, 0) );
+    } catch (\ValueError $e) {
+        echo $e->getMessage() . "\n";
+    }
+    try {
+        var_dump( explode($delimiter, $string, 1) );
+    } catch (\ValueError $e) {
+        echo $e->getMessage() . "\n";
+    }
+    try {
+        var_dump( explode($delimiter, $string, 2) );
+    } catch (\ValueError $e) {
+        echo $e->getMessage() . "\n";
+    }
+    $counter++;
 }
 
-echo "\n*** Testing explode() with miscelleneous input arguments ***\n";
+echo "\n*** Testing explode() with miscellaneous input arguments ***\n";
 
 echo "\n-- Passing positive values of Limit to explode() --\n";
 /* LIMIT=2 */
@@ -77,36 +94,19 @@ class string1 {
 $obj = new string1;
 var_dump( explode("b", $obj) );
 
-echo "Done\n";
 ?>
---EXPECTF--
+--EXPECT--
 *** Testing explode() for basic operations ***
 -- Iteration 1 --
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
+Empty delimiter
+Empty delimiter
+Empty delimiter
+Empty delimiter
 -- Iteration 2 --
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
+Empty delimiter
+Empty delimiter
+Empty delimiter
+Empty delimiter
 -- Iteration 3 --
 array(1) {
   [0]=>
@@ -208,18 +208,10 @@ array(2) {
   string(56) "234NULL23abcd00000TRUEFALSE-11.234444true-11.24%PHP%ZEND"
 }
 -- Iteration 7 --
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
-
-Warning: explode(): Empty delimiter in %s on line %d
-bool(false)
+Empty delimiter
+Empty delimiter
+Empty delimiter
+Empty delimiter
 -- Iteration 8 --
 array(2) {
   [0]=>
@@ -311,7 +303,7 @@ array(2) {
   string(8) "PHP%ZEND"
 }
 
-*** Testing explode() with miscelleneous input arguments ***
+*** Testing explode() with miscellaneous input arguments ***
 
 -- Passing positive values of Limit to explode() --
 array(2) {
@@ -493,4 +485,3 @@ array(2) {
   [1]=>
   string(4) "ject"
 }
-Done

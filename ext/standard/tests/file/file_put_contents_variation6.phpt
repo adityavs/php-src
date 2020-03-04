@@ -29,7 +29,6 @@ set_include_path($newpath);
 runtest();
 
 teardown_include_path();
-restore_include_path();
 chdir("..");
 rmdir($thisTestDir);
 
@@ -48,9 +47,7 @@ function runtest() {
 }
 
 ?>
-===DONE===
 --EXPECT--
 *** Testing file_put_contents() : variation ***
 File in include path. This was appended
 File in include path. This was appended
-===DONE===

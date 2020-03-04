@@ -25,10 +25,8 @@ gzclose($h);
 echo "\n";
 unlink($filename);
 ?>
-===DONE===
 --EXPECT--
-string(0) ""
-string(0) ""
-string(0) ""
+bool(false)
+bool(false)
+bool(false)
 Here is the string to be written. 
-===DONE===

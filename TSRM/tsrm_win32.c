@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -458,7 +456,6 @@ TSRM_API FILE *popen_ex(const char *command, const char *type, const char *cwd, 
 	process_pair *proc;
 	char *cmd = NULL;
 	wchar_t *cmdw = NULL, *cwdw = NULL, *envw = NULL;
-	int i;
 	char *ptype = (char *)type;
 	HANDLE thread_token = NULL;
 	HANDLE token_user = NULL;
@@ -481,12 +478,12 @@ TSRM_API FILE *popen_ex(const char *command, const char *type, const char *cwd, 
 		return NULL;
 	}
 
-	cmd = (char*)malloc(strlen(command)+strlen(TWG(comspec))+sizeof(" /c ")+2);
+	cmd = (char*)malloc(strlen(command)+strlen(TWG(comspec))+sizeof(" /s /c ")+2);
 	if (!cmd) {
 		return NULL;
 	}
 
-	sprintf(cmd, "%s /c \"%s\"", TWG(comspec), command);
+	sprintf(cmd, "%s /s /c \"%s\"", TWG(comspec), command);
 	cmdw = php_win32_cp_any_to_w(cmd);
 	if (!cmdw) {
 		free(cmd);
@@ -721,6 +718,7 @@ TSRM_API void *shmat(int key, const void *shmaddr, int flags)
 TSRM_API int shmdt(const void *shmaddr)
 {/*{{{*/
 	shm_pair *shm = shm_get(0, (void*)shmaddr);
+	int ret;
 
 	if (!shm->segment) {
 		return -1;
@@ -730,7 +728,12 @@ TSRM_API int shmdt(const void *shmaddr)
 	shm->descriptor->shm_lpid  = getpid();
 	shm->descriptor->shm_nattch--;
 
-	return UnmapViewOfFile(shm->addr) ? 0 : -1;
+	ret = UnmapViewOfFile(shm->addr) ? 0 : -1;
+	if (!ret  && shm->descriptor->shm_nattch <= 0) {
+		ret = UnmapViewOfFile(shm->descriptor) ? 0 : -1;
+		shm->descriptor = NULL;
+	}
+	return ret;
 }/*}}}*/
 
 TSRM_API int shmctl(int key, int cmd, struct shmid_ds *buf)
@@ -770,7 +773,7 @@ static zend_always_inline void UnixTimeToFileTime(time_t t, LPFILETIME pft) /* {
 	// Note that LONGLONG is a 64-bit value
 	LONGLONG ll;
 
-	ll = Int32x32To64(t, 10000000) + 116444736000000000;
+	ll = t * 10000000LL + 116444736000000000LL;
 	pft->dwLowDateTime = (DWORD)ll;
 	pft->dwHighDateTime = ll >> 32;
 }

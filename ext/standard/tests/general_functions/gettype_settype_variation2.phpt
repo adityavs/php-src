@@ -24,7 +24,7 @@ precision=14
    Set type of the data to "int"/"integer" and verify using gettype
    Following are performed in the listed sequence:
      get the current type of the variable
-     set the type of the variable to interger/int type
+     set the type of the variable to integer/int type
      dump the variable to see its new data
      get the new type of the variable
 */
@@ -41,10 +41,6 @@ set_error_handler("foo");
 
 $var1 = "another string";
 $var2 = array(2,3,4);
-
-// a variable which is unset
-$unset_var = 10.5;
-unset( $unset_var );
 
 class point
 {
@@ -153,10 +149,6 @@ $var_values = array (
   new point(NULL, NULL),
   new point(2.5, 40.5),
   new point(0, 0),
-
-  /* undefined/unset vars */
-  $unset_var,
-  $undef_var
 );
 
 // test conversion to these types
@@ -189,9 +181,6 @@ foreach ($types as $type) {
 echo "Done\n";
 ?>
 --EXPECT--
-8: Undefined variable: unset_var
-8: Undefined variable: undef_var
-
 *** Testing settype() & gettype() : usage variations ***
 
 -- Setting type of data to integer --
@@ -588,16 +577,6 @@ string(6) "object"
 bool(true)
 int(1)
 string(7) "integer"
--- Iteration 79 --
-string(4) "NULL"
-bool(true)
-int(0)
-string(7) "integer"
--- Iteration 80 --
-string(4) "NULL"
-bool(true)
-int(0)
-string(7) "integer"
 
 -- Setting type of data to int --
 -- Iteration 1 --
@@ -992,15 +971,5 @@ string(6) "object"
 8: Object of class point could not be converted to int
 bool(true)
 int(1)
-string(7) "integer"
--- Iteration 79 --
-string(4) "NULL"
-bool(true)
-int(0)
-string(7) "integer"
--- Iteration 80 --
-string(4) "NULL"
-bool(true)
-int(0)
 string(7) "integer"
 Done

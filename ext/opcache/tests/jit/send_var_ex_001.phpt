@@ -7,19 +7,19 @@ opcache.file_update_protection=0
 opcache.jit_buffer_size=1M
 ;opcache.jit_debug=257
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
 namespace A;
 
 class A {
-	private $evalParameters;
-	public function evaluate() {
-		$this->evalParameters = array("a" => "okey");
-		extract($this->evalParameters, EXTR_SKIP);
-		echo $a;
-		return false;
-	}
+    private $evalParameters;
+    public function evaluate() {
+        $this->evalParameters = array("a" => "okey");
+        extract($this->evalParameters, EXTR_SKIP);
+        echo $a;
+        return false;
+    }
 }
 
 $a = new A();

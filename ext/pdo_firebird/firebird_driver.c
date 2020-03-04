@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -417,7 +415,7 @@ static int firebird_alloc_prepare_stmt(pdo_dbh_t *dbh, const char *sql, size_t s
 	}
 
 	/* prepare the statement */
-	if (isc_dsql_prepare(H->isc_status, &H->tr, s, 0, new_sql, PDO_FB_DIALECT, out_sqlda)) {
+	if (isc_dsql_prepare(H->isc_status, &H->tr, s, 0, new_sql, H->sql_dialect, out_sqlda)) {
 		RECORD_ERROR(dbh);
 		efree(new_sql);
 		return 0;
@@ -465,7 +463,10 @@ static int firebird_handle_set_attribute(pdo_dbh_t *dbh, zend_long attr, zval *v
 
 		case PDO_FB_ATTR_DATE_FORMAT:
 			{
-				zend_string *str = zval_get_string(val);
+				zend_string *str = zval_try_get_string(val);
+				if (UNEXPECTED(!str)) {
+					return 0;
+				}
 				if (H->date_format) {
 					efree(H->date_format);
 				}
@@ -476,7 +477,10 @@ static int firebird_handle_set_attribute(pdo_dbh_t *dbh, zend_long attr, zval *v
 
 		case PDO_FB_ATTR_TIME_FORMAT:
 			{
-				zend_string *str = zval_get_string(val);
+				zend_string *str = zval_try_get_string(val);
+				if (UNEXPECTED(!str)) {
+					return 0;
+				}
 				if (H->time_format) {
 					efree(H->time_format);
 				}
@@ -487,7 +491,10 @@ static int firebird_handle_set_attribute(pdo_dbh_t *dbh, zend_long attr, zval *v
 
 		case PDO_FB_ATTR_TIMESTAMP_FORMAT:
 			{
-				zend_string *str = zval_get_string(val);
+				zend_string *str = zval_try_get_string(val);
+				if (UNEXPECTED(!str)) {
+					return 0;
+				}
 				if (H->timestamp_format) {
 					efree(H->timestamp_format);
 				}
@@ -614,14 +621,25 @@ static int pdo_firebird_handle_factory(pdo_dbh_t *dbh, zval *driver_options) /* 
 	struct pdo_data_src_parser vars[] = {
 		{ "dbname", NULL, 0 },
 		{ "charset",  NULL,	0 },
-		{ "role", NULL,	0 }
+		{ "role", NULL,	0 },
+		{ "dialect", "3", 0 },
+		{ "user", NULL, 0 },
+		{ "password", NULL, 0 }
 	};
 	int i, ret = 0;
 	short buf_len = 256, dpb_len;
 
 	pdo_firebird_db_handle *H = dbh->driver_data = pecalloc(1,sizeof(*H),dbh->is_persistent);
 
-	php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, 3);
+	php_pdo_parse_data_source(dbh->data_source, dbh->data_source_len, vars, 6);
+
+	if (!dbh->username && vars[4].optval) {
+		dbh->username = pestrdup(vars[4].optval, dbh->is_persistent);
+	}
+
+	if (!dbh->password && vars[5].optval) {
+		dbh->password = pestrdup(vars[5].optval, dbh->is_persistent);
+	}
 
 	do {
 		static char const dpb_flags[] = {
@@ -639,6 +657,11 @@ static int pdo_firebird_handle_factory(pdo_dbh_t *dbh, zval *driver_options) /* 
 				dpb += dpb_len;
 				buf_len -= dpb_len;
 			}
+		}
+
+		H->sql_dialect = PDO_FB_DIALECT;
+		if (vars[3].optval) {
+			H->sql_dialect = atoi(vars[3].optval);
 		}
 
 		/* fire it up baby! */

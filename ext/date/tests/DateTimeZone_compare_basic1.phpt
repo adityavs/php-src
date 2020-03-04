@@ -14,8 +14,8 @@ class DateTimeZoneExt1 extends DateTimeZone {
 }
 
 class DateTimeZoneExt2 extends DateTimeZone{
-	public $foo = "Hello";
-	private $bar = 99;
+    public $foo = "Hello";
+    private $bar = 99;
 }
 
 class DateTimeZoneExt3 extends DateTimeZoneExt2 {
@@ -37,7 +37,6 @@ var_dump($obj2 == $obj4);
 var_dump($obj3 == $obj4);
 
 ?>
-===DONE===
 --EXPECT--
 Simple test for DateTimeZone compare object handler
 
@@ -51,4 +50,3 @@ bool(false)
 bool(false)
 bool(false)
 bool(false)
-===DONE===

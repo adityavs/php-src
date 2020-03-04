@@ -6,7 +6,7 @@ opcache.enable_cli=1
 opcache.file_update_protection=0
 opcache.jit_buffer_size=1M
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
 class A {
@@ -35,7 +35,7 @@ bar();
 --EXPECTF--
 int(2)
 
-Notice: Undefined property: A::$y in %sfetch_obj_002.php on line 16
+Warning: Undefined property: A::$y in %s on line %d
 NULL
 int(3)
 string(5) "__get"

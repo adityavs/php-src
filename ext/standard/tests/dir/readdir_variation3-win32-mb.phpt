@@ -24,7 +24,7 @@ echo "*** Testing readdir() : usage variations ***\n";
 chdir(__DIR__);
 include(__DIR__."/../file/file.inc");
 
-$path_top = __DIR__ . '/readdir_variation3';
+$path_top = __DIR__ . '/readdir_variation3-win32-mb';
 $path_sub = $path_top . '/私はガラスを食べられますsub_folder';
 mkdir($path_top);
 mkdir($path_sub);
@@ -35,9 +35,9 @@ create_files($path_sub, 2);
 $dir_handle = opendir($path_top);
 while(FALSE !== ($file = readdir($dir_handle))) {
 
-	// different OS order files differently so will
-	// store file names into an array so can use sorted in expected output
-	$contents[] = $file;
+    // different OS order files differently so will
+    // store file names into an array so can use sorted in expected output
+    $contents[] = $file;
 }
 
 // more important to check that all contents are present than order they are returned in
@@ -49,10 +49,9 @@ delete_files($path_sub, 2);
 
 closedir($dir_handle);
 ?>
-===DONE===
 --CLEAN--
 <?php
-$path_top = __DIR__ . '/readdir_variation3';
+$path_top = __DIR__ . '/readdir_variation3-win32-mb';
 $path_sub = $path_top . '/私はガラスを食べられますsub_folder';
 rmdir($path_sub);
 rmdir($path_top);
@@ -71,4 +70,3 @@ array(5) {
   [4]=>
   string(46) "私はガラスを食べられますsub_folder"
 }
-===DONE===

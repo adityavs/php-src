@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -29,6 +27,7 @@
 #include "ext/spl/php_spl.h"
 #include "ext/spl/spl_iterators.h"
 #include "sxe.h"
+#include "sxe_arginfo.h"
 
 PHP_SXE_API zend_class_entry *ce_SimpleXMLIterator = NULL;
 PHP_SXE_API zend_class_entry *ce_SimpleXMLElement;
@@ -40,7 +39,7 @@ PHP_SXE_API zend_class_entry *ce_SimpleXMLElement;
 PHP_METHOD(ce_SimpleXMLIterator, rewind)
 {
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	php_sxe_rewind_iterator(Z_SXEOBJ_P(ZEND_THIS));
@@ -54,7 +53,7 @@ PHP_METHOD(ce_SimpleXMLIterator, valid)
 	php_sxe_object *sxe = Z_SXEOBJ_P(ZEND_THIS);
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	RETURN_BOOL(!Z_ISUNDEF(sxe->iter.data));
@@ -69,7 +68,7 @@ PHP_METHOD(ce_SimpleXMLIterator, current)
 	zval *data;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (Z_ISUNDEF(sxe->iter.data)) {
@@ -90,7 +89,7 @@ PHP_METHOD(ce_SimpleXMLIterator, key)
 	php_sxe_object *sxe = Z_SXEOBJ_P(ZEND_THIS);
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (Z_ISUNDEF(sxe->iter.data)) {
@@ -112,7 +111,7 @@ PHP_METHOD(ce_SimpleXMLIterator, key)
 PHP_METHOD(ce_SimpleXMLIterator, next)
 {
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	php_sxe_move_forward_iterator(Z_SXEOBJ_P(ZEND_THIS));
@@ -128,7 +127,7 @@ PHP_METHOD(ce_SimpleXMLIterator, hasChildren)
 	xmlNodePtr      node;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (Z_ISUNDEF(sxe->iter.data) || sxe->iter.type == SXE_ITER_ATTRLIST) {
@@ -155,7 +154,7 @@ PHP_METHOD(ce_SimpleXMLIterator, getChildren)
 	zval *data;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (Z_ISUNDEF(sxe->iter.data) || sxe->iter.type == SXE_ITER_ATTRLIST) {
@@ -166,19 +165,14 @@ PHP_METHOD(ce_SimpleXMLIterator, getChildren)
 	ZVAL_COPY_DEREF(return_value, data);
 }
 
-/* {{{ arginfo */
-ZEND_BEGIN_ARG_INFO(arginfo_simplexmliterator__void, 0)
-ZEND_END_ARG_INFO()
-/* }}} */
-
 static const zend_function_entry funcs_SimpleXMLIterator[] = {
-	PHP_ME(ce_SimpleXMLIterator, rewind,                 arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, valid,                  arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, current,                arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, key,                    arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, next,                   arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, hasChildren,            arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
-	PHP_ME(ce_SimpleXMLIterator, getChildren,            arginfo_simplexmliterator__void, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, rewind,                 arginfo_class_SimpleXMLIterator_rewind, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, valid,                  arginfo_class_SimpleXMLIterator_valid, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, current,                arginfo_class_SimpleXMLIterator_current, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, key,                    arginfo_class_SimpleXMLIterator_key, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, next,                   arginfo_class_SimpleXMLIterator_next, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, hasChildren,            arginfo_class_SimpleXMLIterator_hasChildren, ZEND_ACC_PUBLIC)
+	PHP_ME(ce_SimpleXMLIterator, getChildren,            arginfo_class_SimpleXMLIterator_getChildren, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 /* }}} */

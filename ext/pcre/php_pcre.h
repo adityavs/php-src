@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -39,7 +37,18 @@ extern zend_module_entry pcre_module_entry;
 
 typedef struct _pcre_cache_entry pcre_cache_entry;
 
+typedef enum {
+    PHP_PCRE_NO_ERROR = 0,
+    PHP_PCRE_INTERNAL_ERROR,
+    PHP_PCRE_BACKTRACK_LIMIT_ERROR,
+    PHP_PCRE_RECURSION_LIMIT_ERROR,
+    PHP_PCRE_BAD_UTF8_ERROR,
+    PHP_PCRE_BAD_UTF8_OFFSET_ERROR,
+    PHP_PCRE_JIT_STACKLIMIT_ERROR
+} php_pcre_error_code;
+
 PHPAPI pcre_cache_entry* pcre_get_compiled_regex_cache(zend_string *regex);
+PHPAPI pcre_cache_entry* pcre_get_compiled_regex_cache_ex(zend_string *regex, int locale_aware);
 
 PHPAPI void  php_pcre_match_impl(pcre_cache_entry *pce, zend_string *subject_str, zval *return_value,
 	zval *subpats, int global, int use_flags, zend_long flags, zend_off_t start_offset);
@@ -71,7 +80,7 @@ ZEND_BEGIN_MODULE_GLOBALS(pcre)
 	zend_bool jit;
 #endif
 	zend_bool per_request_cache;
-	int  error_code;
+	php_pcre_error_code error_code;
 	/* Used for unmatched subpatterns in OFFSET_CAPTURE mode */
 	zval unmatched_null_pair;
 	zval unmatched_empty_pair;

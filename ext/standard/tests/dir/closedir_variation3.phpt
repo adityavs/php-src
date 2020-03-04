@@ -18,16 +18,18 @@ echo "\n-- Open a file using fopen() --\n";
 var_dump($fp = fopen(__FILE__, 'r'));
 
 echo "\n-- Try to close the file pointer using closedir() --\n";
-var_dump(closedir($fp));
-
+try {
+    var_dump(closedir($fp));
+} catch (\TypeError $e) {
+    echo $e->getMessage() . "\n";
+}
 echo "\n-- Check file pointer: --\n";
 var_dump($fp);
 
 if(is_resource($fp)) {
-	fclose($fp);
+    fclose($fp);
 }
 ?>
-===DONE===
 --EXPECTF--
 *** Testing closedir() : usage variations ***
 
@@ -35,10 +37,7 @@ if(is_resource($fp)) {
 resource(%d) of type (stream)
 
 -- Try to close the file pointer using closedir() --
-
-Warning: closedir(): %d is not a valid Directory resource in %s on line %d
-bool(false)
+%d is not a valid Directory resource
 
 -- Check file pointer: --
 resource(%d) of type (stream)
-===DONE===

@@ -5,16 +5,7 @@ Test mkdir() and rmdir() functions: usage variations - misc.
 if (substr(PHP_OS, 0, 3) == 'WIN') {
     die('skip.. only on LINUX');
 }
-// Skip if being run by root (files are always readable, writeable and executable)
-$filename = __DIR__."/is_readable_root_check.tmp";
-$fp = fopen($filename, 'w');
-fclose($fp);
-if(fileowner($filename) == 0) {
-	unlink ($filename);
-	die('skip cannot be run as root');
-}
-
-unlink($filename);
+require __DIR__ . '/../skipif_root.inc';
 ?>
 --FILE--
 <?php
@@ -46,7 +37,7 @@ try {
     echo $e->getMessage(), "\n";
 }
 
-echo "\n*** Testing mkdir() with miscelleneous input ***\n";
+echo "\n*** Testing mkdir() with miscellaneous input ***\n";
 /* changing mode of mkdir to prevent creating sub-directory under it */
 var_dump( chmod("$file_path/mkdir_variation2/", 0000) );
 /* creating sub-directory test1 under mkdir, expected: false */
@@ -72,10 +63,10 @@ Warning: rmdir(%s/mkdir_variation2/): %s on line %d
 bool(false)
 
 *** Testing mkdir() and rmdir() for binary safe functionality ***
-mkdir() expects parameter 1 to be a valid path, string given
-rmdir() expects parameter 1 to be a valid path, string given
+mkdir(): Argument #1 ($pathname) must be a valid path, string given
+rmdir(): Argument #1 ($dirname) must be a valid path, string given
 
-*** Testing mkdir() with miscelleneous input ***
+*** Testing mkdir() with miscellaneous input ***
 bool(true)
 
 Warning: mkdir(): Permission denied in %s on line %d

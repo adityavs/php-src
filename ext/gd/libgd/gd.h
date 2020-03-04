@@ -364,6 +364,10 @@ gdImagePtr gdImageCreateFromWebp(FILE *fd);
 gdImagePtr gdImageCreateFromWebpCtx(gdIOCtxPtr in);
 gdImagePtr gdImageCreateFromWebpPtr (int size, void *data);
 
+gdImagePtr gdImageCreateFromTga( FILE * fp );
+gdImagePtr gdImageCreateFromTgaCtx(gdIOCtx* ctx);
+gdImagePtr gdImageCreateFromTgaPtr(int size, void *data);
+
 gdImagePtr gdImageCreateFromBmp (FILE * inFile);
 gdImagePtr gdImageCreateFromBmpPtr (int size, void *data);
 gdImagePtr gdImageCreateFromBmpCtx (gdIOCtxPtr infile);
@@ -717,6 +721,18 @@ enum gdPixelateMode {
 
 int gdImagePixelate(gdImagePtr im, int block_size, const unsigned int mode);
 
+typedef struct {
+	int sub;
+	int plus;
+	unsigned int num_colors;
+	int *colors;
+	unsigned int seed;
+} gdScatter, *gdScatterPtr;
+
+int gdImageScatter(gdImagePtr im, int sub, int plus);
+int gdImageScatterColor(gdImagePtr im, int sub, int plus, int colors[], unsigned int num_colors);
+int gdImageScatterEx(gdImagePtr im, gdScatterPtr s);
+
 /* Macros to access information about images. */
 
 /* Returns nonzero if the image is a truecolor image,
@@ -886,7 +902,7 @@ int gdTransformAffineBoundingBox(gdRectPtr src, const double affine[6], gdRectPt
 
 
 #define GD_CMP_IMAGE		1	/* Actual image IS different */
-#define GD_CMP_NUM_COLORS	2	/* Number of Colours in pallette differ */
+#define GD_CMP_NUM_COLORS	2	/* Number of Colours in palette differ */
 #define GD_CMP_COLOR		4	/* Image colours differ */
 #define GD_CMP_SIZE_X		8	/* Image width differs */
 #define GD_CMP_SIZE_Y		16	/* Image heights differ */

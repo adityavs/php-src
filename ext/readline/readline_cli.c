@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -351,11 +349,14 @@ static int cli_is_valid_code(char *code, size_t len, zend_string **prompt) /* {{
 				break;
 			case heredoc:
 				ZEND_ASSERT(heredoc_tag);
-				if (code[i - (heredoc_len + 1)] == '\n' && !strncmp(code + i - heredoc_len, heredoc_tag, heredoc_len) && code[i] == '\n') {
+				if (!strncmp(code + i - heredoc_len + 1, heredoc_tag, heredoc_len)) {
+					unsigned char c = code[i + 1];
+					char *p = code + i - heredoc_len;
+
+					if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c >= 0x80) break;
+					while (*p == ' ' || *p == '\t') p--;
+					if (*p != '\n') break;
 					code_type = body;
-				} else if (code[i - (heredoc_len + 2)] == '\n' && !strncmp(code + i - heredoc_len - 1, heredoc_tag, heredoc_len) && code[i-1] == ';' && code[i] == '\n') {
-					code_type = body;
-					valid_end = 1;
 				}
 				break;
 			case outside:
@@ -592,17 +593,9 @@ static int readline_shell_run(void) /* {{{ */
 	int history_lines_to_write = 0;
 
 	if (PG(auto_prepend_file) && PG(auto_prepend_file)[0]) {
-		zend_file_handle *prepend_file_p;
 		zend_file_handle prepend_file;
-
-		memset(&prepend_file, 0, sizeof(prepend_file));
-		prepend_file.filename = PG(auto_prepend_file);
-		prepend_file.opened_path = NULL;
-		prepend_file.free_filename = 0;
-		prepend_file.type = ZEND_HANDLE_FILENAME;
-		prepend_file_p = &prepend_file;
-
-		zend_execute_scripts(ZEND_REQUIRE, NULL, 1, prepend_file_p);
+		zend_stream_init_filename(&prepend_file, PG(auto_prepend_file));
+		zend_execute_scripts(ZEND_REQUIRE, NULL, 1, &prepend_file);
 	}
 
 #ifndef PHP_WIN32

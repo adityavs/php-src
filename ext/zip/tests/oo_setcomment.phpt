@@ -8,13 +8,13 @@ if(!extension_loaded('zip')) die('skip');
 <?php
 $dirname = __DIR__ . '/';
 include $dirname . 'utils.inc';
-$file = $dirname . '__tmp_oo_set_comment.zip';
+$file = $dirname . 'oo_setcomment.zip';
 
 @unlink($file);
 
 $zip = new ZipArchive;
 if (!$zip->open($file, ZIPARCHIVE::CREATE)) {
-	exit('failed');
+    exit('failed');
 }
 
 $zip->addFromString('entry1.txt', 'entry #1');
@@ -34,13 +34,13 @@ var_dump($zip->setCommentIndex(4, 'entry5.txt'));
 var_dump($zip->setArchiveComment('archive'));
 
 if (!$zip->status == ZIPARCHIVE::ER_OK) {
-	echo "failed to write zip\n";
+    echo "failed to write zip\n";
 }
 $zip->close();
 
 if (!$zip->open($file)) {
-	@unlink($file);
-	exit('failed');
+    @unlink($file);
+    exit('failed');
 }
 
 var_dump($zip->getCommentIndex(0));

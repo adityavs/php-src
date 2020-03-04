@@ -14,13 +14,14 @@ echo "*** Testing array_fill() : error conditions ***\n";
 $start_key = 0;
 $num = -1;
 $val = 1;
-var_dump( array_fill($start_key,$num,$val) );
 
-echo "Done";
+try {
+    var_dump( array_fill($start_key,$num,$val) );
+} catch (\ValueError $e) {
+    echo $e->getMessage() . "\n";
+}
+
 ?>
---EXPECTF--
+--EXPECT--
 *** Testing array_fill() : error conditions ***
-
-Warning: array_fill(): Number of elements can't be negative in %s on line %d
-bool(false)
-Done
+Number of elements can't be negative

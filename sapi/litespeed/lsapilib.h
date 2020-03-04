@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -71,7 +69,7 @@ struct LSAPI_key_value_pair
 };
 
 
-#define LSAPI_MAX_RESP_HEADERS  100
+#define LSAPI_MAX_RESP_HEADERS  1000
 
 typedef struct lsapi_request
 {

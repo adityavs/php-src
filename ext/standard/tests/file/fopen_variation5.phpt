@@ -45,7 +45,6 @@ $modes = array("r", "r+", "rt");
 foreach($modes as $mode) {
     test_fopen($mode);
 }
-restore_include_path();
 
 // remove the directory structure
 chdir($baseDir);
@@ -122,7 +121,6 @@ function test_fopen($mode) {
 }
 
 ?>
-===DONE===
 --EXPECT--
 --- testing include path ---
 
@@ -146,4 +144,3 @@ in dir1
 in dir1
 in working dir
 in script dir
-===DONE===

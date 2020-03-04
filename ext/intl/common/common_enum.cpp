@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
@@ -24,6 +22,7 @@
 #include <stdio.h>
 
 #include "common_enum.h"
+#include "common_arginfo.h"
 
 extern "C" {
 #include <zend_interfaces.h>
@@ -148,7 +147,7 @@ U_CFUNC void IntlIterator_from_StringEnumeration(StringEnumeration *se, zval *ob
 	ii->iterator->funcs = &string_enum_object_iterator_funcs;
 	ii->iterator->index = 0;
 	((zoi_with_current*)ii->iterator)->destroy_it = string_enum_destroy_it;
-	ZVAL_COPY_VALUE(&((zoi_with_current*)ii->iterator)->wrapping_obj, object);
+	ZVAL_OBJ(&((zoi_with_current*)ii->iterator)->wrapping_obj, Z_OBJ_P(object));
 	ZVAL_UNDEF(&((zoi_with_current*)ii->iterator)->current);
 }
 
@@ -211,7 +210,7 @@ static PHP_METHOD(IntlIterator, current)
 	INTLITERATOR_METHOD_INIT_VARS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	INTLITERATOR_METHOD_FETCH_OBJECT;
@@ -226,7 +225,7 @@ static PHP_METHOD(IntlIterator, key)
 	INTLITERATOR_METHOD_INIT_VARS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	INTLITERATOR_METHOD_FETCH_OBJECT;
@@ -243,7 +242,7 @@ static PHP_METHOD(IntlIterator, next)
 	INTLITERATOR_METHOD_INIT_VARS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	INTLITERATOR_METHOD_FETCH_OBJECT;
@@ -258,7 +257,7 @@ static PHP_METHOD(IntlIterator, rewind)
 	INTLITERATOR_METHOD_INIT_VARS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	INTLITERATOR_METHOD_FETCH_OBJECT;
@@ -275,22 +274,19 @@ static PHP_METHOD(IntlIterator, valid)
 	INTLITERATOR_METHOD_INIT_VARS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	INTLITERATOR_METHOD_FETCH_OBJECT;
 	RETURN_BOOL(ii->iterator->funcs->valid(ii->iterator) == SUCCESS);
 }
 
-ZEND_BEGIN_ARG_INFO_EX(ainfo_se_void, 0, 0, 0)
-ZEND_END_ARG_INFO()
-
 static const zend_function_entry IntlIterator_class_functions[] = {
-	PHP_ME(IntlIterator,	current,	ainfo_se_void,			ZEND_ACC_PUBLIC)
-	PHP_ME(IntlIterator,	key,		ainfo_se_void,			ZEND_ACC_PUBLIC)
-	PHP_ME(IntlIterator,	next,		ainfo_se_void,			ZEND_ACC_PUBLIC)
-	PHP_ME(IntlIterator,	rewind,		ainfo_se_void,			ZEND_ACC_PUBLIC)
-	PHP_ME(IntlIterator,	valid,		ainfo_se_void,			ZEND_ACC_PUBLIC)
+	PHP_ME(IntlIterator,	current,	arginfo_class_IntlIterator_current,		ZEND_ACC_PUBLIC)
+	PHP_ME(IntlIterator,	key,		arginfo_class_IntlIterator_key,			ZEND_ACC_PUBLIC)
+	PHP_ME(IntlIterator,	next,		arginfo_class_IntlIterator_next,		ZEND_ACC_PUBLIC)
+	PHP_ME(IntlIterator,	rewind,		arginfo_class_IntlIterator_rewind,		ZEND_ACC_PUBLIC)
+	PHP_ME(IntlIterator,	valid,		arginfo_class_IntlIterator_valid,		ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 

@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -24,41 +22,7 @@
 #include "php.h"
 #if HAVE_LIBXML && HAVE_DOM
 #include "php_dom.h"
-
-/* {{{ arginfo */
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_get_named_item, 0, 0, 1)
-	ZEND_ARG_INFO(0, name)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_set_named_item, 0, 0, 1)
-	ZEND_ARG_OBJ_INFO(0, arg, DOMNode, 0)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_remove_named_item, 0, 0, 0)
-	ZEND_ARG_INFO(0, name)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_item, 0, 0, 0)
-	ZEND_ARG_INFO(0, index)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_get_named_item_ns, 0, 0, 0)
-	ZEND_ARG_INFO(0, namespaceURI)
-	ZEND_ARG_INFO(0, localName)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_set_named_item_ns, 0, 0, 0)
-	ZEND_ARG_OBJ_INFO(0, arg, DOMNode, 0)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_remove_named_item_ns, 0, 0, 0)
-	ZEND_ARG_INFO(0, namespaceURI)
-	ZEND_ARG_INFO(0, localName)
-ZEND_END_ARG_INFO();
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_dom_namednodemap_count, 0, 0, 0)
-ZEND_END_ARG_INFO();
-/* }}} */
+#include "dom_arginfo.h"
 
 /*
 * class DOMNamedNodeMap
@@ -68,14 +32,10 @@ ZEND_END_ARG_INFO();
 */
 
 const zend_function_entry php_dom_namednodemap_class_functions[] = { /* {{{ */
-	PHP_FALIAS(getNamedItem, dom_namednodemap_get_named_item, arginfo_dom_namednodemap_get_named_item)
-	PHP_FALIAS(setNamedItem, dom_namednodemap_set_named_item, arginfo_dom_namednodemap_set_named_item)
-	PHP_FALIAS(removeNamedItem, dom_namednodemap_remove_named_item, arginfo_dom_namednodemap_remove_named_item)
-	PHP_FALIAS(item, dom_namednodemap_item, arginfo_dom_namednodemap_item)
-	PHP_FALIAS(getNamedItemNS, dom_namednodemap_get_named_item_ns, arginfo_dom_namednodemap_get_named_item_ns)
-	PHP_FALIAS(setNamedItemNS, dom_namednodemap_set_named_item_ns, arginfo_dom_namednodemap_set_named_item_ns)
-	PHP_FALIAS(removeNamedItemNS, dom_namednodemap_remove_named_item_ns, arginfo_dom_namednodemap_remove_named_item_ns)
-	PHP_FALIAS(count, dom_namednodemap_count, arginfo_dom_namednodemap_count)
+	PHP_ME(domnamednodemap, getNamedItem, arginfo_class_DOMNamedNodeMap_getNamedItem, ZEND_ACC_PUBLIC)
+	PHP_ME(domnamednodemap, item, arginfo_class_DOMNamedNodeMap_item, ZEND_ACC_PUBLIC)
+	PHP_ME(domnamednodemap, getNamedItemNS, arginfo_class_DOMNamedNodeMap_getNamedItemNS, ZEND_ACC_PUBLIC)
+	PHP_ME(domnamednodemap, count, arginfo_class_DOMNamedNodeMap_count, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 /* }}} */
@@ -125,7 +85,7 @@ int dom_namednodemap_length_read(dom_object *obj, zval *retval)
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1074577549
 Since:
 */
-PHP_FUNCTION(dom_namednodemap_get_named_item)
+PHP_METHOD(domnamednodemap, getNamedItem)
 {
 	zval *id;
 	int ret;
@@ -140,7 +100,7 @@ PHP_FUNCTION(dom_namednodemap_get_named_item)
 
 	id = ZEND_THIS;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &named, &namedlen) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	intern = Z_DOMOBJ_P(id);
@@ -177,31 +137,11 @@ PHP_FUNCTION(dom_namednodemap_get_named_item)
 }
 /* }}} end dom_namednodemap_get_named_item */
 
-/* {{{ proto DOMNode dom_namednodemap_set_named_item(DOMNode arg);
-URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1025163788
-Since:
-*/
-PHP_FUNCTION(dom_namednodemap_set_named_item)
-{
- DOM_NOT_IMPLEMENTED();
-}
-/* }}} end dom_namednodemap_set_named_item */
-
-/* {{{ proto DOMNode dom_namednodemap_remove_named_item(string name);
-URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-D58B193
-Since:
-*/
-PHP_FUNCTION(dom_namednodemap_remove_named_item)
-{
- DOM_NOT_IMPLEMENTED();
-}
-/* }}} end dom_namednodemap_remove_named_item */
-
 /* {{{ proto DOMNode dom_namednodemap_item(int index);
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-349467F9
 Since:
 */
-PHP_FUNCTION(dom_namednodemap_item)
+PHP_METHOD(domnamednodemap, item)
 {
 	zval *id;
 	zend_long index;
@@ -215,7 +155,7 @@ PHP_FUNCTION(dom_namednodemap_item)
 
 	id = ZEND_THIS;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 	if (index >= 0) {
 		if (ZEND_LONG_INT_OVFL(index)) {
@@ -265,7 +205,7 @@ PHP_FUNCTION(dom_namednodemap_item)
 URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-getNamedItemNS
 Since: DOM Level 2
 */
-PHP_FUNCTION(dom_namednodemap_get_named_item_ns)
+PHP_METHOD(domnamednodemap, getNamedItemNS)
 {
 	zval *id;
 	int ret;
@@ -280,7 +220,7 @@ PHP_FUNCTION(dom_namednodemap_get_named_item_ns)
 
 	id = ZEND_THIS;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s!s", &uri, &urilen, &named, &namedlen) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	intern = Z_DOMOBJ_P(id);
@@ -317,36 +257,16 @@ PHP_FUNCTION(dom_namednodemap_get_named_item_ns)
 }
 /* }}} end dom_namednodemap_get_named_item_ns */
 
-/* {{{ proto DOMNode dom_namednodemap_set_named_item_ns(DOMNode arg);
-URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-setNamedItemNS
-Since: DOM Level 2
-*/
-PHP_FUNCTION(dom_namednodemap_set_named_item_ns)
-{
- DOM_NOT_IMPLEMENTED();
-}
-/* }}} end dom_namednodemap_set_named_item_ns */
-
-/* {{{ proto DOMNode dom_namednodemap_remove_named_item_ns(string namespaceURI, string localName);
-URL: http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-removeNamedItemNS
-Since: DOM Level 2
-*/
-PHP_FUNCTION(dom_namednodemap_remove_named_item_ns)
-{
- DOM_NOT_IMPLEMENTED();
-}
-/* }}} end dom_namednodemap_remove_named_item_ns */
-
 /* {{{ proto int|bool dom_namednodemap_count();
 */
-PHP_FUNCTION(dom_namednodemap_count)
+PHP_METHOD(domnamednodemap, count)
 {
 	zval *id;
 	dom_object *intern;
 
 	id = ZEND_THIS;
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	intern = Z_DOMOBJ_P(id);

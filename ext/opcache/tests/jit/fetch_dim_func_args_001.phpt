@@ -6,15 +6,15 @@ opcache.enable_cli=1
 opcache.file_update_protection=0
 opcache.jit_buffer_size=1M
 --SKIPIF--
-<?php require_once('../skipif.inc'); ?>
+<?php require_once('skipif.inc'); ?>
 --FILE--
 <?php
 namespace A;
 
 class A {
-	public function change(array $config) {
-		$config['keys'] = array_keys($config["a"]);;
-	}
+    public function change(array $config) {
+        $config['keys'] = array_keys($config["a"]);;
+    }
 }
 
 $a = new A();

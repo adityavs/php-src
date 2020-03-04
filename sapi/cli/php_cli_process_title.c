@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -33,7 +31,7 @@ PHP_FUNCTION(cli_set_process_title)
     int rc;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &title, &title_len) == FAILURE) {
-        return;
+        RETURN_THROWS();
     }
 
     rc = set_ps_title(title);
@@ -55,7 +53,7 @@ PHP_FUNCTION(cli_get_process_title)
         int rc;
 
         if (zend_parse_parameters_none() == FAILURE) {
-            return;
+            RETURN_THROWS();
         }
 
         rc = get_ps_title(&length, &title);

@@ -9,7 +9,7 @@ $rc = new ReflectionClass("ReflectionClass");
 echo $rc;
 ?>
 --EXPECT--
-Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
+Class [ <internal:Reflection> class ReflectionClass implements Reflector, Stringable ] {
 
   - Constants [3] {
     Constant [ public int IS_IMPLICIT_ABSTRACT ] { 16 }
@@ -20,14 +20,7 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
   - Static properties [0] {
   }
 
-  - Static methods [1] {
-    Method [ <internal:Reflection, prototype Reflector> static public method export ] {
-
-      - Parameters [2] {
-        Parameter #0 [ <required> $argument ]
-        Parameter #1 [ <optional> $return ]
-      }
-    }
+  - Static methods [0] {
   }
 
   - Properties [1] {
@@ -48,10 +41,11 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
       }
     }
 
-    Method [ <internal:Reflection, prototype Reflector> public method __toString ] {
+    Method [ <internal:Reflection, prototype Stringable> public method __toString ] {
 
       - Parameters [0] {
       }
+      - Return [ string ]
     }
 
     Method [ <internal:Reflection> public method getName ] {
@@ -123,49 +117,49 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
     Method [ <internal:Reflection> public method hasMethod ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
     Method [ <internal:Reflection> public method getMethod ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
     Method [ <internal:Reflection> public method getMethods ] {
 
       - Parameters [1] {
-        Parameter #0 [ <optional> $filter ]
+        Parameter #0 [ <optional> ?int $filter ]
       }
     }
 
     Method [ <internal:Reflection> public method hasProperty ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
     Method [ <internal:Reflection> public method getProperty ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
     Method [ <internal:Reflection> public method getProperties ] {
 
       - Parameters [1] {
-        Parameter #0 [ <optional> $filter ]
+        Parameter #0 [ <optional> ?int $filter ]
       }
     }
 
     Method [ <internal:Reflection> public method hasConstant ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
@@ -184,14 +178,14 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
     Method [ <internal:Reflection> public method getConstant ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
     Method [ <internal:Reflection> public method getReflectionConstant ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
       }
     }
 
@@ -258,7 +252,7 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
     Method [ <internal:Reflection> public method isInstance ] {
 
       - Parameters [1] {
-        Parameter #0 [ <required> $object ]
+        Parameter #0 [ <required> object $object ]
       }
     }
 
@@ -304,7 +298,7 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
     Method [ <internal:Reflection> public method getStaticPropertyValue ] {
 
       - Parameters [2] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
         Parameter #1 [ <optional> $default ]
       }
     }
@@ -312,7 +306,7 @@ Class [ <internal:Reflection> class ReflectionClass implements Reflector ] {
     Method [ <internal:Reflection> public method setStaticPropertyValue ] {
 
       - Parameters [2] {
-        Parameter #0 [ <required> $name ]
+        Parameter #0 [ <required> string $name ]
         Parameter #1 [ <required> $value ]
       }
     }

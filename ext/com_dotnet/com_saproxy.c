@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -274,18 +272,6 @@ static void saproxy_write_dimension(zend_object *object, zval *offset, zval *val
 	}
 }
 
-#if 0
-static void saproxy_object_set(zval **property, zval *value)
-{
-}
-
-static zval *saproxy_object_get(zval *property)
-{
-	/* Not yet implemented in the engine */
-	return NULL;
-}
-#endif
-
 static int saproxy_property_exists(zend_object *object, zend_string *member, int check_empty, void **cache_slot)
 {
 	/* no properties */
@@ -333,6 +319,7 @@ static zend_string* saproxy_class_name_get(const zend_object *object)
 
 static int saproxy_objects_compare(zval *object1, zval *object2)
 {
+	ZEND_COMPARE_OBJECTS_FALLBACK(object1, object2);
 	return -1;
 }
 
@@ -401,8 +388,6 @@ zend_object_handlers php_com_saproxy_handlers = {
 	saproxy_read_dimension,
 	saproxy_write_dimension,
 	NULL,
-	NULL, /* saproxy_object_get, */
-	NULL, /* saproxy_object_set, */
 	saproxy_property_exists,
 	saproxy_property_delete,
 	saproxy_dimension_exists,
@@ -411,9 +396,14 @@ zend_object_handlers php_com_saproxy_handlers = {
 	saproxy_method_get,
 	saproxy_constructor_get,
 	saproxy_class_name_get,
-	saproxy_objects_compare,
 	saproxy_object_cast,
-	saproxy_count_elements
+	saproxy_count_elements,
+	NULL,									/* get_debug_info */
+	NULL,									/* get_closure */
+	NULL,									/* get_gc */
+	NULL,									/* do_operation */
+	saproxy_objects_compare,				/* compare */
+	NULL,									/* get_properties_for */
 };
 
 int php_com_saproxy_create(zend_object *com_object, zval *proxy_out, zval *index)
@@ -542,7 +532,8 @@ zend_object_iterator *php_com_saproxy_iter_get(zend_class_entry *ce, zval *objec
 	Z_PTR(I->iter.data) = I;
 
 	I->proxy = proxy;
-	ZVAL_COPY(&I->proxy_obj, object);
+	Z_ADDREF_P(object);
+	ZVAL_OBJ(&I->proxy_obj, Z_OBJ_P(object));
 
 	I->indices = safe_emalloc(proxy->dimensions + 1, sizeof(LONG), 0);
 	for (i = 0; i < proxy->dimensions; i++) {

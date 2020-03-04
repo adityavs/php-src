@@ -1,5 +1,5 @@
 --TEST--
-SCCP 017: Array assignemnt
+SCCP 017: Array assignment
 --INI--
 opcache.enable=1
 opcache.enable_cli=1
@@ -11,11 +11,11 @@ opcache.preload=
 --FILE--
 <?php
 function foo(int $x) {
-	$a[0] = 5;
-	$a[1] = $x;
-	$b = $a;
-	$b[0] = 42;
-	return $a[0];
+    $a[0] = 5;
+    $a[1] = $x;
+    $b = $a;
+    $b[0] = 42;
+    return $a[0];
 }
 ?>
 --EXPECTF--

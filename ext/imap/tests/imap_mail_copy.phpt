@@ -23,7 +23,7 @@ require_once(__DIR__.'/imap_include.inc');
 
 echo "Test with IMAP server\n";
 $stream_id = imap_open($default_mailbox, $username, $password) or
-	die("Cannot connect to mailbox $default_mailbox: " . imap_last_error());
+    die("Cannot connect to mailbox $default_mailbox: " . imap_last_error());
 
 var_dump(imap_mail_copy($stream_id));
 var_dump(imap_mail_copy($stream_id,-1));
@@ -31,7 +31,6 @@ var_dump(imap_mail_copy($stream_id, ''));
 
 imap_close($stream_id);
 ?>
-===Done===
 --EXPECTF--
 Checking with no parameters
 
@@ -51,4 +50,3 @@ NULL
 
 Warning: imap_mail_copy() expects at least 3 parameters, 2 given in %s on line %d
 NULL
-===Done===

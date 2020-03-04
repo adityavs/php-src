@@ -1,6 +1,4 @@
 #  +----------------------------------------------------------------------+
-#  | PHP Version 7                                                        |
-#  +----------------------------------------------------------------------+
 #  | Copyright (c) The PHP Group                                          |
 #  +----------------------------------------------------------------------+
 #  | This source file is subject to version 3.01 of the PHP license,      |
@@ -77,16 +75,16 @@ $(BUILD_DIR)\$(PHPDLL).def: $(PHP_DLL_DEF_SOURCES)
 	type $(PHP_DLL_DEF_SOURCES) > $(BUILD_DIR)\$(PHPDLL).def
 
 Zend\zend_ini_parser.c Zend\zend_ini_parser.h: Zend\zend_ini_parser.y
-	$(BISON) --output=Zend/zend_ini_parser.c -v -d -p ini_ Zend/zend_ini_parser.y
+	$(BISON) --output=Zend/zend_ini_parser.c -v -d Zend/zend_ini_parser.y
 
 Zend\zend_language_parser.c Zend\zend_language_parser.h: Zend\zend_language_parser.y
-	$(BISON) --output=Zend/zend_language_parser.c -v -d -p zend Zend/zend_language_parser.y
+	$(BISON) --output=Zend/zend_language_parser.c -v -d Zend/zend_language_parser.y
 	@if "$(SED)" neq "" $(SED) -i "s,^int zendparse\(.*\),ZEND_API int zendparse\1,g" Zend/zend_language_parser.c
 	@if "$(SED)" neq "" $(SED) -i "s,^int zendparse\(.*\),ZEND_API int zendparse\1,g" Zend/zend_language_parser.h
 	@if "$(SED)" neq "" $(SED) -i "s,^#ifndef YYTOKENTYPE,#include \"zend.h\"\n#ifndef YYTOKENTYPE,g" Zend/zend_language_parser.h
 
 sapi\phpdbg\phpdbg_parser.c sapi\phpdbg\phpdbg_parser.h: sapi\phpdbg\phpdbg_parser.y
-	$(BISON) --output=sapi/phpdbg/phpdbg_parser.c -v -d -p phpdbg_ sapi/phpdbg/phpdbg_parser.y
+	$(BISON) --output=sapi/phpdbg/phpdbg_parser.c -v -d sapi/phpdbg/phpdbg_parser.y
 
 !if $(RE2C) != ""
 Zend\zend_ini_scanner.c: Zend\zend_ini_scanner.l
@@ -264,3 +262,4 @@ really-install:
 	@echo Registering event source with syslog (requires admin rights)
 	@echo It's okay for this step to fail:
 	-$(PHP_PREFIX)\php.exe -n -dextension_dir=$(PHP_PREFIX) win32/build/registersyslog.php $(PHP_PREFIX)\$(PHPDLL)
+	-regedit /s win32\syslog.reg

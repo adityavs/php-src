@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
    | available through the world-wide-web at the following url:           |
@@ -41,9 +39,9 @@ static void _php_intlrbbi_constructor_body(INTERNAL_FUNCTION_PARAMETERS)
 	UErrorCode	status		= U_ZERO_ERROR;
 	intl_error_reset(NULL);
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "s|b",
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|b",
 			&rules, &rules_len, &compiled) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	// instantiation of ICU object
@@ -97,13 +95,13 @@ U_CFUNC PHP_METHOD(IntlRuleBasedBreakIterator, __construct)
 	zend_restore_error_handling(&error_handling);
 }
 
-U_CFUNC PHP_FUNCTION(rbbi_get_rules)
+U_CFUNC PHP_METHOD(IntlRuleBasedBreakIterator, getRules)
 {
 	BREAKITER_METHOD_INIT_VARS;
 	object = ZEND_THIS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	BREAKITER_METHOD_FETCH_OBJECT;
@@ -122,13 +120,13 @@ U_CFUNC PHP_FUNCTION(rbbi_get_rules)
 	RETVAL_STR(u8str);
 }
 
-U_CFUNC PHP_FUNCTION(rbbi_get_rule_status)
+U_CFUNC PHP_METHOD(IntlRuleBasedBreakIterator, getRuleStatus)
 {
 	BREAKITER_METHOD_INIT_VARS;
 	object = ZEND_THIS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	BREAKITER_METHOD_FETCH_OBJECT;
@@ -136,13 +134,13 @@ U_CFUNC PHP_FUNCTION(rbbi_get_rule_status)
 	RETURN_LONG(fetch_rbbi(bio)->getRuleStatus());
 }
 
-U_CFUNC PHP_FUNCTION(rbbi_get_rule_status_vec)
+U_CFUNC PHP_METHOD(IntlRuleBasedBreakIterator, getRuleStatusVec)
 {
 	BREAKITER_METHOD_INIT_VARS;
 	object = ZEND_THIS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	BREAKITER_METHOD_FETCH_OBJECT;
@@ -174,13 +172,13 @@ U_CFUNC PHP_FUNCTION(rbbi_get_rule_status_vec)
 	delete[] rules;
 }
 
-U_CFUNC PHP_FUNCTION(rbbi_get_binary_rules)
+U_CFUNC PHP_METHOD(IntlRuleBasedBreakIterator, getBinaryRules)
 {
 	BREAKITER_METHOD_INIT_VARS;
 	object = ZEND_THIS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	BREAKITER_METHOD_FETCH_OBJECT;

@@ -11,7 +11,7 @@ if /i "%APPVEYOR_REPO_BRANCH:~0,4%" equ "php-" (
 	set BRANCH=master
 	set STABILITY=staging
 )
-set DEPS_DIR=%PHP_BUILD_CACHE_BASE_DIR%\deps-%BRANCH%-%PHP_SDK_VC%-%PHP_SDK_ARCH%
+set DEPS_DIR=%PHP_BUILD_CACHE_BASE_DIR%\deps-%BRANCH%-%PHP_SDK_VS%-%PHP_SDK_ARCH%
 if not exist "%DEPS_DIR%" (
 	echo "%DEPS_DIR%" doesn't exist
 	exit /b 3
@@ -27,7 +27,7 @@ set PDO_MYSQL_TEST_USER=%MYSQL_TEST_USER%
 set PDO_MYSQL_TEST_PASS=%MYSQL_PWD%
 set PDO_MYSQL_TEST_HOST=%MYSQL_TEST_HOST%
 set PDO_MYSQL_TEST_PORT=%MYSQL_TEST_PORT%
-set PDO_MYSQL_TEST_DSN=mysql:host=%PDO_MYSQL_TEST_HOST%;port=%PDO_MYSQL_TEST_PORT%;dbname=test;user=%PDO_MYSQL_TEST_USER%;password=%MYSQL_PW%
+set PDO_MYSQL_TEST_DSN=mysql:host=%PDO_MYSQL_TEST_HOST%;port=%PDO_MYSQL_TEST_PORT%;dbname=test
 "C:\Program Files\MySql\MySQL Server 5.7\bin\mysql.exe" --user=%MYSQL_TEST_USER% -e "CREATE DATABASE IF NOT EXISTS test"
 if %errorlevel% neq 0 exit /b 3
 
@@ -49,16 +49,21 @@ set PDOTEST_DSN=odbc:%ODBC_TEST_DSN%
 rem prepare for ext/openssl
 if "%APPVEYOR%" equ "True" rmdir /s /q C:\OpenSSL-Win32 >NUL 2>NUL
 if "%APPVEYOR%" equ "True" rmdir /s /q C:\OpenSSL-Win64 >NUL 2>NUL
-mkdir c:\usr\local\ssl
+if "%PLATFORM%" == "x64" (
+	set OPENSSLDIR="C:\Program Files\Common Files\SSL"
+) else (
+	set OPENSSLDIR="C:\Program Files (x86)\Common Files\SSL"
+)
+mkdir %OPENSSLDIR%
 if %errorlevel% neq 0 exit /b 3
-copy %DEPS_DIR%\template\ssl\openssl.cnf c:\usr\local\ssl
+copy %DEPS_DIR%\template\ssl\openssl.cnf %OPENSSLDIR%
 if %errorlevel% neq 0 exit /b 3
-set OPENSSL_CONF=c:\usr\local\ssl\openssl.cnf
-rem set OPENSSL_CONF=
+rem set OPENSSL_CONF=%OPENSSLDIR%\openssl.cnf
+set OPENSSL_CONF=
 rem set SSLEAY_CONF=
 
 rem prepare for Opcache
-if "%OPCACHE%" equ "1" set OPCACHE_OPTS=-d opcache.enabled=1 -d opcache.enable_cli=1 -d opcache.protect_memory=1
+if "%OPCACHE%" equ "1" set OPCACHE_OPTS=-d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.protect_memory=1
 
 rem prepare for enchant
 mkdir c:\enchant_plugins

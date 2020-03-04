@@ -139,8 +139,6 @@ if (!$r) {
 }
 
 ?>
-===DONE===
-<?php exit(0); ?>
 --EXPECTF--
 Test 1 - Parse
 array(4) {
@@ -167,7 +165,7 @@ array(4) {
 
 Test 2 - Parse
 
-Warning: oci_error() expects parameter 1 to be resource, bool%sgiven in %sbug51291_1.php on line %d
+Warning: oci_error(): Argument #1 must be of type resource, bool%sgiven in %sbug51291_1.php on line %d
 bool(false)
 array(4) {
   ["code"]=>
@@ -182,7 +180,7 @@ array(4) {
 NULL
 2nd call
 
-Warning: oci_error() expects parameter 1 to be resource, bool%sgiven in %sbug51291_1.php on line %d
+Warning: oci_error(): Argument #1 must be of type resource, bool%sgiven in %sbug51291_1.php on line %d
 bool(false)
 array(4) {
   ["code"]=>
@@ -391,4 +389,3 @@ array(4) {
   ["sqltext"]=>
   string(30) "select reallynothere from dual"
 }
-===DONE===

@@ -1,5 +1,3 @@
-dnl config.m4 for sapi phpdbg
-
 PHP_ARG_ENABLE([phpdbg],
   [for phpdbg support],
   [AS_HELP_STRING([--enable-phpdbg],
@@ -65,9 +63,9 @@ if test "$BUILD_PHPDBG" = "" && test "$PHP_PHPDBG" != "no"; then
 
   BUILD_PHPDBG="\$(LIBTOOL) --mode=link \
         \$(CC) -export-dynamic \$(CFLAGS_CLEAN) \$(EXTRA_CFLAGS) \$(EXTRA_LDFLAGS_PROGRAM) \$(LDFLAGS) \$(PHP_RPATHS) \
-                \$(PHP_GLOBAL_OBJS) \
-                \$(PHP_BINARY_OBJS) \
-                \$(PHP_PHPDBG_OBJS) \
+                \$(PHP_GLOBAL_OBJS:.lo=.o) \
+                \$(PHP_BINARY_OBJS:.lo=.o) \
+                \$(PHP_PHPDBG_OBJS:.lo=.o) \
                 \$(EXTRA_LIBS) \
                 \$(PHPDBG_EXTRA_LIBS) \
                 \$(ZEND_EXTRA_LIBS) \

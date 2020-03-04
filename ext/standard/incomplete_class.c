@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -110,9 +108,10 @@ static zend_object *php_create_incomplete_object(zend_class_entry *class_type)
 
 PHPAPI zend_class_entry *php_create_incomplete_class(void)
 {
-	zend_class_entry incomplete_class;
+	zend_class_entry incomplete_class, *incomplete_class_entry;
 
 	INIT_CLASS_ENTRY(incomplete_class, INCOMPLETE_CLASS, NULL);
+
 	incomplete_class.create_object = php_create_incomplete_object;
 
 	memcpy(&php_incomplete_object_handlers, &std_object_handlers, sizeof(zend_object_handlers));
@@ -123,7 +122,10 @@ PHPAPI zend_class_entry *php_create_incomplete_class(void)
 	php_incomplete_object_handlers.get_property_ptr_ptr = incomplete_class_get_property_ptr_ptr;
     php_incomplete_object_handlers.get_method = incomplete_class_get_method;
 
-	return zend_register_internal_class(&incomplete_class);
+	incomplete_class_entry = zend_register_internal_class(&incomplete_class);
+	incomplete_class_entry->ce_flags |= ZEND_ACC_FINAL;
+
+	return incomplete_class_entry;
 }
 /* }}} */
 

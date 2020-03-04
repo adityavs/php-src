@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -86,7 +84,6 @@
 
 enum mysqli_status {
 	MYSQLI_STATUS_UNKNOWN=0,
-	MYSQLI_STATUS_CLEARED,
 	MYSQLI_STATUS_INITIALIZED,
 	MYSQLI_STATUS_VALID
 };
@@ -158,7 +155,7 @@ struct st_mysqli_warning {
 typedef struct _mysqli_property_entry {
 	const char *pname;
 	size_t pname_length;
-	zval *(*r_func)(mysqli_object *obj, zval *retval);
+	int (*r_func)(mysqli_object *obj, zval *retval, zend_bool quiet);
 	int (*w_func)(mysqli_object *obj, zval *value);
 } mysqli_property_entry;
 
@@ -249,13 +246,13 @@ extern void php_mysqli_fetch_into_hash_aux(zval *return_value, MYSQL_RES * resul
 	MYSQLI_RESOURCE *my_res; \
 	mysqli_object *intern = Z_MYSQLI_P(__id); \
 	if (!(my_res = (MYSQLI_RESOURCE *)intern->ptr)) {\
-  		php_error_docref(NULL, E_WARNING, "Couldn't fetch %s", ZSTR_VAL(intern->zo.ce->name));\
-		RETURN_FALSE;\
+		zend_throw_error(NULL, "%s object is already closed", ZSTR_VAL(intern->zo.ce->name));\
+		RETURN_THROWS();\
   	}\
 	__ptr = (__type)my_res->ptr; \
 	if (__check && my_res->status < __check) { \
-		php_error_docref(NULL, E_WARNING, "invalid object or resource %s\n", ZSTR_VAL(intern->zo.ce->name)); \
-		RETURN_FALSE;\
+		zend_throw_error(NULL, "%s object is not fully initialized", ZSTR_VAL(intern->zo.ce->name)); \
+		RETURN_THROWS();\
 	}\
 }
 
@@ -263,12 +260,12 @@ extern void php_mysqli_fetch_into_hash_aux(zval *return_value, MYSQL_RES * resul
 { \
 	MYSQLI_RESOURCE *my_res; \
 	if (!(my_res = (MYSQLI_RESOURCE *)(__obj->ptr))) {\
-  		php_error_docref(NULL, E_WARNING, "Couldn't fetch %s", ZSTR_VAL(intern->zo.ce->name));\
-  		return;\
-  	}\
+		zend_throw_error(NULL, "%s object is already closed", ZSTR_VAL(intern->zo.ce->name));\
+		return;\
+	}\
 	__ptr = (__type)my_res->ptr; \
 	if (__check && my_res->status < __check) { \
-		php_error_docref(NULL, E_WARNING, "invalid object or resource %s\n", ZSTR_VAL(intern->zo.ce->name)); \
+		zend_throw_error(NULL, "%s object is not fully initialized", ZSTR_VAL(intern->zo.ce->name)); \
 		return;\
 	}\
 }
@@ -276,21 +273,13 @@ extern void php_mysqli_fetch_into_hash_aux(zval *return_value, MYSQL_RES * resul
 #define MYSQLI_FETCH_RESOURCE_CONN(__ptr, __id, __check) \
 { \
 	MYSQLI_FETCH_RESOURCE((__ptr), MY_MYSQL *, (__id), "mysqli_link", (__check)); \
-	if (!(__ptr)->mysql) { \
-		mysqli_object *intern = Z_MYSQLI_P(__id); \
-		php_error_docref(NULL, E_WARNING, "invalid object or resource %s\n", ZSTR_VAL(intern->zo.ce->name)); \
-		RETURN_NULL(); \
-	} \
+	ZEND_ASSERT((__ptr)->mysql && "Missing connection?"); \
 }
 
 #define MYSQLI_FETCH_RESOURCE_STMT(__ptr, __id, __check) \
 { \
 	MYSQLI_FETCH_RESOURCE((__ptr), MY_STMT *, (__id), "mysqli_stmt", (__check)); \
-	if (!(__ptr)->stmt) { \
-		mysqli_object *intern = Z_MYSQLI_P(__id); \
-		php_error_docref(NULL, E_WARNING, "invalid object or resource %s\n", ZSTR_VAL(intern->zo.ce->name)); \
-		RETURN_NULL();\
-	} \
+	ZEND_ASSERT((__ptr)->stmt && "Missing statement?"); \
 }
 
 #define MYSQLI_SET_STATUS(__id, __value) \

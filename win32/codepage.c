@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -66,7 +64,7 @@ __forceinline static wchar_t *php_win32_cp_to_w_int(const char* in, size_t in_le
 	}
 
 	assert(ret ? tmp_len == ret_len : 1);
-	assert(ret ? wcslen(ret) == ret_len - 1 : 1);
+	assert(ret && !in_len ? wcslen(ret) == ret_len - 1 : 1);
 
 	ret[ret_len-1] = L'\0';
 
@@ -106,6 +104,10 @@ PW32CP wchar_t *php_win32_cp_conv_ascii_to_w(const char* in, size_t in_len, size
 	wchar_t *ret, *ret_idx;
 	const char *idx = in, *end;
 	char ch_err = 0;
+
+#if PHP_DEBUG
+	size_t save_in_len = in_len;
+#endif
 
 	assert(in && in_len ? in[in_len] == '\0' : 1);
 
@@ -195,7 +197,7 @@ PW32CP wchar_t *php_win32_cp_conv_ascii_to_w(const char* in, size_t in_len, size
 
 	ret[in_len] = L'\0';
 
-	assert(ret ? wcslen(ret) == in_len : 1);
+	assert(ret && !save_in_len ? wcslen(ret) == in_len : 1);
 
 	if (PHP_WIN32_CP_IGNORE_LEN_P != out_len) {
 		*out_len = in_len;
@@ -239,7 +241,7 @@ __forceinline static char *php_win32_cp_from_w_int(const wchar_t* in, size_t in_
 	}
 
 	assert(target ? r == target_len : 1);
-	assert(target ? strlen(target) == target_len - 1 : 1);
+	assert(target && !in_len ? strlen(target) == target_len - 1 : 1);
 
 	target[target_len-1] = '\0';
 
@@ -561,7 +563,7 @@ PHP_FUNCTION(sapi_windows_cp_set)
 	const struct php_win32_cp *cp;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &id) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (ZEND_LONG_UINT_OVFL(id)) {
@@ -591,7 +593,7 @@ PHP_FUNCTION(sapi_windows_cp_get)
 	size_t kind_len = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s", &kind, &kind_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (kind_len == sizeof("ansi")-1 && !strncasecmp(kind, "ansi", kind_len)) {
@@ -611,7 +613,7 @@ PHP_FUNCTION(sapi_windows_cp_get)
 PHP_FUNCTION(sapi_windows_cp_is_utf8)
 {
 	if (zend_parse_parameters_none() == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	RETURN_BOOL(php_win32_cp_use_unicode());
@@ -629,7 +631,7 @@ PHP_FUNCTION(sapi_windows_cp_conv)
 	zval *z_in_cp, *z_out_cp;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zzs", &z_in_cp, &z_out_cp, &subj, &subj_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (ZEND_SIZE_T_INT_OVFL(subj_len)) {
@@ -649,7 +651,9 @@ PHP_FUNCTION(sapi_windows_cp_conv)
 			RETURN_NULL();
 		}
 	} else {
-		convert_to_string(z_in_cp);
+		if (!try_convert_to_string(z_in_cp)) {
+			return;
+		}
 
 		in_cp = php_win32_cp_get_by_enc(Z_STRVAL_P(z_in_cp));
 		if (!in_cp) {
@@ -670,7 +674,9 @@ PHP_FUNCTION(sapi_windows_cp_conv)
 			RETURN_NULL();
 		}
 	} else {
-		convert_to_string(z_out_cp);
+		if (!try_convert_to_string(z_out_cp)) {
+			return;
+		}
 
 		out_cp = php_win32_cp_get_by_enc(Z_STRVAL_P(z_out_cp));
 		if (!out_cp) {

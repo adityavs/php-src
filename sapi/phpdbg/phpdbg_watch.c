@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,	  |
@@ -1073,7 +1071,7 @@ void phpdbg_reenable_memory_watches(void) {
 	phpdbg_watchpoint_t *watch;
 
 	ZEND_HASH_FOREACH_NUM_KEY(PHPDBG_G(watchlist_mem), page) {
-		/* Disble writing again if there are any watchers on that page */
+		/* Disable writing again if there are any watchers on that page */
 		res = phpdbg_btree_find_closest(&PHPDBG_G(watchpoint_tree), page + phpdbg_pagesize - 1);
 		if (res) {
 			watch = res->ptr;

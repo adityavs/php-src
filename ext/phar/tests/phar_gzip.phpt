@@ -39,13 +39,7 @@ $a->setAlias('another');
 $b = new Phar($fname2);
 var_dump($b->isFileFormat(Phar::PHAR));
 var_dump($b->isCompressed() == Phar::GZ);
-$a = stat($pname . '/test');
-$b = stat($pname2 . '/test');
-if ($a['mtime'] != $b['mtime']) {
-	echo "timestamp changed, was $a[mtime], now $b[mtime]!\n";
-}
 ?>
-===DONE===
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/phar_gzip.phar');
@@ -56,4 +50,3 @@ string(9) "it worked"
 string(%d) "phar://%sphar_gzip.phar/tar_004.php"
 bool(true)
 bool(true)
-===DONE===

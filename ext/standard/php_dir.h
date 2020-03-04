@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -30,7 +28,7 @@ PHP_FUNCTION(chroot);
 #endif
 PHP_FUNCTION(getcwd);
 PHP_FUNCTION(rewinddir);
-PHP_NAMED_FUNCTION(php_if_readdir);
+PHP_FUNCTION(readdir);
 PHP_FUNCTION(getdir);
 PHP_FUNCTION(glob);
 PHP_FUNCTION(scandir);

@@ -5,7 +5,7 @@ else
 	TS="";
 fi
 if [[ "$ENABLE_DEBUG" == 1 ]]; then
-	DEBUG="--enable-debug --without-pcre-valgrind";
+	DEBUG="--enable-debug";
 else
 	DEBUG="";
 fi
@@ -23,10 +23,11 @@ else
 	MAKE_QUIET=""
 fi
 
-MAKE_JOBS=${MAKE_JOBS:-2}
+MAKE_JOBS=${MAKE_JOBS:-$(nproc)}
 
 ./buildconf --force
 ./configure \
+--enable-option-checking=fatal \
 --prefix="$HOME"/php-install \
 $CONFIG_QUIET \
 $DEBUG \
@@ -46,7 +47,7 @@ $TS \
 --with-freetype \
 --with-xpm \
 --enable-exif \
---enable-zip \
+--with-zip \
 --with-zlib \
 --with-zlib-dir=/usr \
 --enable-soap \
@@ -73,9 +74,11 @@ $TS \
 --with-enchant=/usr \
 --with-kerberos \
 --enable-sysvmsg \
+--with-ffi \
+--with-sodium \
 --enable-zend-test=shared \
 --enable-werror \
-> "$CONFIG_LOG_FILE"
+--with-pear
 
-make "-j${MAKE_JOBS}" $MAKE_QUIET > "$MAKE_LOG_FILE"
-make install >> "$MAKE_LOG_FILE"
+make "-j${MAKE_JOBS}" $MAKE_QUIET
+make install

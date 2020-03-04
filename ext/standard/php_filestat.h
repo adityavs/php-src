@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -41,8 +39,8 @@ PHP_FUNCTION(is_file);
 PHP_FUNCTION(is_dir);
 PHP_FUNCTION(is_link);
 PHP_FUNCTION(file_exists);
-PHP_NAMED_FUNCTION(php_if_stat);
-PHP_NAMED_FUNCTION(php_if_lstat);
+PHP_FUNCTION(stat);
+PHP_FUNCTION(lstat);
 PHP_FUNCTION(disk_total_space);
 PHP_FUNCTION(disk_free_space);
 PHP_FUNCTION(chown);
@@ -57,7 +55,6 @@ PHP_FUNCTION(chmod);
 #if HAVE_UTIME
 PHP_FUNCTION(touch);
 #endif
-PHP_FUNCTION(clearstatcache);
 
 #ifdef PHP_WIN32
 #define S_IRUSR S_IREAD

@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7														  |
-   +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,	  |
    | that is bundled with this package in the file LICENSE, and is		  |
    | available through the world-wide-web at the following url:			  |
@@ -109,7 +107,7 @@ PHP_FUNCTION( normalizer_normalize )
 	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "s|l",
 				&input, &input_len, &form ) == FAILURE )
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	expansion_factor = 1;
@@ -246,7 +244,7 @@ PHP_FUNCTION( normalizer_is_normalized )
 	if( zend_parse_method_parameters( ZEND_NUM_ARGS(), getThis(), "s|l",
 				&input, &input_len, &form) == FAILURE )
 	{
-		RETURN_FALSE;
+		RETURN_THROWS();
 	}
 
 	switch(form) {
@@ -333,7 +331,7 @@ PHP_FUNCTION( normalizer_get_raw_decomposition )
 	intl_error_reset(NULL);
 
 	if ((zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &input, &input_length, &form) == FAILURE)) {
-		return;
+		RETURN_THROWS();
 	}
 
 	norm = intl_get_normalizer(form, &status);

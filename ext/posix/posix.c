@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -25,7 +23,7 @@
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
 #include "php_posix.h"
-
+#include "posix_arginfo.h"
 
 #if HAVE_POSIX
 
@@ -51,172 +49,6 @@
 
 ZEND_DECLARE_MODULE_GLOBALS(posix)
 static PHP_MINFO_FUNCTION(posix);
-
-/* {{{ arginfo */
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_kill, 0, 0, 2)
-	ZEND_ARG_INFO(0, pid)
-	ZEND_ARG_INFO(0, sig)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getpid, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getppid, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getuid, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_setuid, 0, 0, 1)
-	ZEND_ARG_INFO(0, uid)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_geteuid, 0)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_SETEUID
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_seteuid, 0, 0, 1)
-	ZEND_ARG_INFO(0, uid)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getgid, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_setgid, 0, 0, 1)
-	ZEND_ARG_INFO(0, gid)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getegid, 0)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_SETEGID
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_setegid, 0, 0, 1)
-	ZEND_ARG_INFO(0, gid)
-ZEND_END_ARG_INFO()
-#endif
-
-#ifdef HAVE_GETGROUPS
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getgroups, 0)
-ZEND_END_ARG_INFO()
-#endif
-
-#ifdef HAVE_GETLOGIN
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getlogin, 0)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getpgrp, 0)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_SETSID
-ZEND_BEGIN_ARG_INFO(arginfo_posix_setsid, 0)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_setpgid, 0, 0, 2)
-	ZEND_ARG_INFO(0, pid)
-	ZEND_ARG_INFO(0, pgid)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_GETPGID
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getpgid, 0, 0, 1)
-	ZEND_ARG_INFO(0, pid)
-ZEND_END_ARG_INFO()
-#endif
-
-#ifdef HAVE_GETSID
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getsid, 0, 0, 1)
-	ZEND_ARG_INFO(0, pid)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_uname, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_times, 0)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_CTERMID
-ZEND_BEGIN_ARG_INFO(arginfo_posix_ctermid, 0)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_ttyname, 0, 0, 1)
-	ZEND_ARG_INFO(0, fd)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_isatty, 0, 0, 1)
-	ZEND_ARG_INFO(0, fd)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getcwd, 0)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_MKFIFO
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_mkfifo, 0, 0, 2)
-	ZEND_ARG_INFO(0, pathname)
-	ZEND_ARG_INFO(0, mode)
-ZEND_END_ARG_INFO()
-#endif
-
-#ifdef HAVE_MKNOD
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_mknod, 0, 0, 2)
-	ZEND_ARG_INFO(0, pathname)
-	ZEND_ARG_INFO(0, mode)
-	ZEND_ARG_INFO(0, major)
-	ZEND_ARG_INFO(0, minor)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_access, 0, 0, 1)
-	ZEND_ARG_INFO(0, file)
-	ZEND_ARG_INFO(0, mode)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getgrnam, 0, 0, 1)
-	ZEND_ARG_INFO(0, name)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getgrgid, 0, 0, 1)
-	ZEND_ARG_INFO(0, gid)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getpwnam, 0, 0, 1)
-	ZEND_ARG_INFO(0, username)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_getpwuid, 0, 0, 1)
-	ZEND_ARG_INFO(0, uid)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_GETRLIMIT
-ZEND_BEGIN_ARG_INFO(arginfo_posix_getrlimit, 0)
-ZEND_END_ARG_INFO()
-#endif
-
-#ifdef HAVE_SETRLIMIT
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_setrlimit, 0, 0, 3)
-	ZEND_ARG_INFO(0, resource)
-	ZEND_ARG_INFO(0, softlimit)
-	ZEND_ARG_INFO(0, hardlimit)
-ZEND_END_ARG_INFO()
-#endif
-
-ZEND_BEGIN_ARG_INFO(arginfo_posix_get_last_error, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_strerror, 0, 0, 1)
-	ZEND_ARG_INFO(0, errno)
-ZEND_END_ARG_INFO()
-
-#ifdef HAVE_INITGROUPS
-ZEND_BEGIN_ARG_INFO_EX(arginfo_posix_initgroups, 0, 0, 2)
-	ZEND_ARG_INFO(0, name)
-	ZEND_ARG_INFO(0, base_group_id)
-ZEND_END_ARG_INFO()
-#endif
-/* }}} */
 
 /* {{{ posix_functions[]
  */
@@ -302,7 +134,7 @@ static const zend_function_entry posix_functions[] = {
 #endif
 
 	PHP_FE(posix_get_last_error,					arginfo_posix_get_last_error)
-	PHP_FALIAS(posix_errno, posix_get_last_error,	arginfo_posix_get_last_error)
+	PHP_FALIAS(posix_errno, posix_get_last_error,	arginfo_posix_errno)
 	PHP_FE(posix_strerror,							arginfo_posix_strerror)
 #ifdef HAVE_INITGROUPS
 	PHP_FE(posix_initgroups,	arginfo_posix_initgroups)
@@ -436,17 +268,15 @@ ZEND_TSRMLS_CACHE_DEFINE()
 ZEND_GET_MODULE(posix)
 #endif
 
-#define PHP_POSIX_NO_ARGS	if (zend_parse_parameters_none() == FAILURE) return;
-
 #define PHP_POSIX_RETURN_LONG_FUNC(func_name)	\
-	PHP_POSIX_NO_ARGS	\
+	ZEND_PARSE_PARAMETERS_NONE();	\
 	RETURN_LONG(func_name());
 
 #define PHP_POSIX_SINGLE_ARG_FUNC(func_name)	\
 	zend_long val;	\
 	ZEND_PARSE_PARAMETERS_START(1, 1) \
 		Z_PARAM_LONG(val) \
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE); \
+	ZEND_PARSE_PARAMETERS_END(); \
 	if (func_name(val) < 0) {	\
 		POSIX_G(last_error) = errno;	\
 		RETURN_FALSE;	\
@@ -463,7 +293,7 @@ PHP_FUNCTION(posix_kill)
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_LONG(pid)
 		Z_PARAM_LONG(sig)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (kill(pid, sig) < 0) {
 		POSIX_G(last_error) = errno;
@@ -567,7 +397,7 @@ PHP_FUNCTION(posix_getgroups)
 	int    result;
 	int    i;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if ((result = getgroups(NGROUPS_MAX, gidlist)) < 0) {
 		POSIX_G(last_error) = errno;
@@ -590,7 +420,7 @@ PHP_FUNCTION(posix_getlogin)
 {
 	char *p;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if (NULL == (p = getlogin())) {
 		POSIX_G(last_error) = errno;
@@ -629,7 +459,7 @@ PHP_FUNCTION(posix_setpgid)
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_LONG(pid)
 		Z_PARAM_LONG(pgid)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (setpgid(pid, pgid) < 0) {
 		POSIX_G(last_error) = errno;
@@ -649,7 +479,7 @@ PHP_FUNCTION(posix_getpgid)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(val)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if ((val = getpgid(val)) < 0) {
 		POSIX_G(last_error) = errno;
@@ -669,7 +499,7 @@ PHP_FUNCTION(posix_getsid)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(val)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if ((val = getsid(val)) < 0) {
 		POSIX_G(last_error) = errno;
@@ -686,7 +516,7 @@ PHP_FUNCTION(posix_uname)
 {
 	struct utsname u;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if (uname(&u) < 0) {
 		POSIX_G(last_error) = errno;
@@ -718,7 +548,7 @@ PHP_FUNCTION(posix_times)
 	struct tms t;
 	clock_t    ticks;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if ((ticks = times(&t)) == -1) {
 		POSIX_G(last_error) = errno;
@@ -746,7 +576,7 @@ PHP_FUNCTION(posix_ctermid)
 {
 	char  buffer[L_ctermid];
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	if (NULL == ctermid(buffer)) {
 		/* Found no documentation how the defined behaviour is when this
@@ -769,7 +599,6 @@ static int php_posix_stream_get_fd(zval *zfp, int *fd) /* {{{ */
 	php_stream_from_zval_no_verify(stream, zfp);
 
 	if (stream == NULL) {
-		php_error_docref(NULL, E_WARNING, "expects argument 1 to be a valid stream resource");
 		return 0;
 	}
 	if (php_stream_can_cast(stream, PHP_STREAM_AS_FD_FOR_SELECT) == SUCCESS) {
@@ -777,7 +606,7 @@ static int php_posix_stream_get_fd(zval *zfp, int *fd) /* {{{ */
 	} else if (php_stream_can_cast(stream, PHP_STREAM_AS_FD) == SUCCESS) {
 		php_stream_cast(stream, PHP_STREAM_AS_FD, (void*)fd, 0);
 	} else {
-		php_error_docref(NULL, E_WARNING, "could not use stream of type '%s'",
+		php_error_docref(NULL, E_WARNING, "Could not use stream of type '%s'",
 				stream->ops->label);
 		return 0;
 	}
@@ -798,7 +627,7 @@ PHP_FUNCTION(posix_ttyname)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(z_fd)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	switch (Z_TYPE_P(z_fd)) {
 		case IS_RESOURCE:
@@ -842,7 +671,7 @@ PHP_FUNCTION(posix_isatty)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_ZVAL(z_fd)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	switch (Z_TYPE_P(z_fd)) {
 		case IS_RESOURCE:
@@ -878,7 +707,7 @@ PHP_FUNCTION(posix_getcwd)
 	char  buffer[MAXPATHLEN];
 	char *p;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	p = VCWD_GETCWD(buffer, MAXPATHLEN);
 	if (!p) {
@@ -908,7 +737,7 @@ PHP_FUNCTION(posix_mkfifo)
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_PATH_STR(path)
 		Z_PARAM_LONG(mode)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (php_check_open_basedir_ex(ZSTR_VAL(path), 0)) {
 		RETURN_FALSE;
@@ -942,7 +771,7 @@ PHP_FUNCTION(posix_mknod)
 		Z_PARAM_OPTIONAL
 		Z_PARAM_LONG(major)
 		Z_PARAM_LONG(minor)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (php_check_open_basedir_ex(ZSTR_VAL(path), 0)) {
 		RETURN_FALSE;
@@ -998,8 +827,15 @@ int php_posix_group_to_array(struct group *g, zval *array_group) /* {{{ */
 	} else {
 		add_assoc_null(array_group, "passwd");
 	}
-	for (count = 0; g->gr_mem[count] != NULL; count++) {
-		add_next_index_string(&array_members, g->gr_mem[count]);
+	for (count = 0;; count++) {
+		/* gr_mem entries may be misaligned on macos. */
+		char *gr_mem;
+		memcpy(&gr_mem, &g->gr_mem[count], sizeof(char *));
+		if (!gr_mem) {
+			break;
+		}
+
+		add_next_index_string(&array_members, gr_mem);
 	}
 	zend_hash_str_update(Z_ARRVAL_P(array_group), "members", sizeof("members")-1, &array_members);
 	add_assoc_long(array_group, "gid", g->gr_gid);
@@ -1026,7 +862,7 @@ PHP_FUNCTION(posix_access)
 		Z_PARAM_PATH(filename, filename_len)
 		Z_PARAM_OPTIONAL
 		Z_PARAM_LONG(mode)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	path = expand_filepath(filename, NULL);
 	if (!path) {
@@ -1074,7 +910,7 @@ PHP_FUNCTION(posix_getgrnam)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_STRING(name, name_len)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 #if defined(ZTS) && defined(HAVE_GETGRNAM_R) && defined(_SC_GETGR_R_SIZE_MAX)
 	buflen = sysconf(_SC_GETGR_R_SIZE_MAX);
@@ -1105,7 +941,7 @@ try_again:
 
 	if (!php_posix_group_to_array(g, return_value)) {
 		zend_array_destroy(Z_ARR_P(return_value));
-		php_error_docref(NULL, E_WARNING, "unable to convert posix group to array");
+		php_error_docref(NULL, E_WARNING, "Unable to convert posix group to array");
 		RETVAL_FALSE;
 	}
 #if defined(ZTS) && defined(HAVE_GETGRNAM_R) && defined(_SC_GETGR_R_SIZE_MAX)
@@ -1130,7 +966,7 @@ PHP_FUNCTION(posix_getgrgid)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(gid)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 #if defined(ZTS) && defined(HAVE_GETGRGID_R) && defined(_SC_GETGR_R_SIZE_MAX)
 
@@ -1158,7 +994,7 @@ PHP_FUNCTION(posix_getgrgid)
 
 	if (!php_posix_group_to_array(g, return_value)) {
 		zend_array_destroy(Z_ARR_P(return_value));
-		php_error_docref(NULL, E_WARNING, "unable to convert posix group struct to array");
+		php_error_docref(NULL, E_WARNING, "Unable to convert posix group struct to array");
 		RETVAL_FALSE;
 	}
 #if defined(ZTS) && defined(HAVE_GETGRGID_R) && defined(_SC_GETGR_R_SIZE_MAX)
@@ -1200,7 +1036,7 @@ PHP_FUNCTION(posix_getpwnam)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_STRING(name, name_len)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 #if defined(ZTS) && defined(_SC_GETPW_R_SIZE_MAX) && defined(HAVE_GETPWNAM_R)
 	buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
@@ -1225,7 +1061,7 @@ PHP_FUNCTION(posix_getpwnam)
 
 	if (!php_posix_passwd_to_array(pw, return_value)) {
 		zend_array_destroy(Z_ARR_P(return_value));
-		php_error_docref(NULL, E_WARNING, "unable to convert posix passwd struct to array");
+		php_error_docref(NULL, E_WARNING, "Unable to convert posix passwd struct to array");
 		RETVAL_FALSE;
 	}
 #if defined(ZTS) && defined(_SC_GETPW_R_SIZE_MAX) && defined(HAVE_GETPWNAM_R)
@@ -1250,7 +1086,7 @@ PHP_FUNCTION(posix_getpwuid)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(uid)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 #if defined(ZTS) && defined(_SC_GETPW_R_SIZE_MAX) && defined(HAVE_GETPWUID_R)
 	pwbuflen = sysconf(_SC_GETPW_R_SIZE_MAX);
@@ -1276,7 +1112,7 @@ PHP_FUNCTION(posix_getpwuid)
 
 	if (!php_posix_passwd_to_array(pw, return_value)) {
 		zend_array_destroy(Z_ARR_P(return_value));
-		php_error_docref(NULL, E_WARNING, "unable to convert posix passwd struct to array");
+		php_error_docref(NULL, E_WARNING, "Unable to convert posix passwd struct to array");
 		RETVAL_FALSE;
 	}
 #if defined(ZTS) && defined(_SC_GETPW_R_SIZE_MAX) && defined(HAVE_GETPWUID_R)
@@ -1388,7 +1224,7 @@ PHP_FUNCTION(posix_getrlimit)
 {
 	const struct limitlist *l = NULL;
 
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	array_init(return_value);
 
@@ -1415,7 +1251,7 @@ PHP_FUNCTION(posix_setrlimit)
 		Z_PARAM_LONG(res)
 		Z_PARAM_LONG(cur)
 		Z_PARAM_LONG(max)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	rl.rlim_cur = cur;
 	rl.rlim_max = max;
@@ -1436,7 +1272,7 @@ PHP_FUNCTION(posix_setrlimit)
    Retrieve the error number set by the last posix function which failed. */
 PHP_FUNCTION(posix_get_last_error)
 {
-	PHP_POSIX_NO_ARGS;
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	RETURN_LONG(POSIX_G(last_error));
 }
@@ -1450,7 +1286,7 @@ PHP_FUNCTION(posix_strerror)
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_LONG(error)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	RETURN_STRING(strerror(error));
 }
@@ -1470,7 +1306,7 @@ PHP_FUNCTION(posix_initgroups)
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_STRING(name, name_len)
 		Z_PARAM_LONG(basegid)
-	ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+	ZEND_PARSE_PARAMETERS_END();
 
 	if (name_len == 0) {
 		RETURN_FALSE;

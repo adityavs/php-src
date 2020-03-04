@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -62,7 +60,7 @@
 #define VOLUME_NAME_DOS 0x0
 #endif
 
-/* {{{ proto string readlink(string filename)
+/* {{{ proto string|false readlink(string filename)
    Return the target of a symbolic link */
 PHP_FUNCTION(readlink)
 {
@@ -96,7 +94,7 @@ PHP_FUNCTION(readlink)
 }
 /* }}} */
 
-/* {{{ proto int linkinfo(string filename)
+/* {{{ proto int|false linkinfo(string filename)
    Returns the st_dev field of the UNIX C stat structure describing the link */
 PHP_FUNCTION(linkinfo)
 {
@@ -130,7 +128,7 @@ PHP_FUNCTION(linkinfo)
 }
 /* }}} */
 
-/* {{{ proto int symlink(string target, string link)
+/* {{{ proto bool symlink(string target, string link)
    Create a symbolic link */
 PHP_FUNCTION(symlink)
 {
@@ -189,7 +187,7 @@ PHP_FUNCTION(symlink)
 }
 /* }}} */
 
-/* {{{ proto int link(string target, string link)
+/* {{{ proto bool link(string target, string link)
    Create a hard link */
 PHP_FUNCTION(link)
 {

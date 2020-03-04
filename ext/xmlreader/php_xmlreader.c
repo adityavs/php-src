@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -31,12 +29,16 @@
 #endif
 #include <libxml/xmlreader.h>
 #include <libxml/uri.h>
+#include "xmlreader_arginfo.h"
 
 zend_class_entry *xmlreader_class_entry;
 
 static zend_object_handlers xmlreader_object_handlers;
 
 static HashTable xmlreader_prop_handlers;
+
+static zend_internal_function xmlreader_open_fn;
+static zend_internal_function xmlreader_xml_fn;
 
 typedef int (*xmlreader_read_int_t)(xmlTextReaderPtr reader);
 typedef unsigned char *(*xmlreader_read_char_t)(xmlTextReaderPtr reader);
@@ -179,6 +181,25 @@ zval *xmlreader_write_property(zend_object *object, zend_string *name, zval *val
 	}
 
 	return value;
+}
+/* }}} */
+
+/* {{{ */
+static zend_function *xmlreader_get_method(zend_object **obj, zend_string *name, const zval *key)
+{
+	if (ZSTR_LEN(name) == sizeof("open") - 1
+			&& (ZSTR_VAL(name)[0] == 'o' || ZSTR_VAL(name)[0] == 'O')
+			&& (ZSTR_VAL(name)[1] == 'p' || ZSTR_VAL(name)[1] == 'P')
+			&& (ZSTR_VAL(name)[2] == 'e' || ZSTR_VAL(name)[2] == 'E')
+			&& (ZSTR_VAL(name)[3] == 'n' || ZSTR_VAL(name)[3] == 'N')) {
+		return (zend_function*)&xmlreader_open_fn;
+	} else if (ZSTR_LEN(name) == sizeof("xml") - 1
+			&& (ZSTR_VAL(name)[0] == 'x' || ZSTR_VAL(name)[0] == 'X')
+			&& (ZSTR_VAL(name)[1] == 'm' || ZSTR_VAL(name)[1] == 'M')
+			&& (ZSTR_VAL(name)[2] == 'l' || ZSTR_VAL(name)[2] == 'L')) {
+		return (zend_function*)&xmlreader_xml_fn;
+	}
+	return zend_std_get_method(obj, name, key);;
 }
 /* }}} */
 
@@ -367,7 +388,7 @@ static void php_xmlreader_string_arg(INTERNAL_FUNCTION_PARAMETERS, xmlreader_rea
 	char *name;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &name, &name_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (!name_len) {
@@ -397,6 +418,10 @@ static void php_xmlreader_no_arg(INTERNAL_FUNCTION_PARAMETERS, xmlreader_read_in
 	int retval;
 	xmlreader_object *intern;
 
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	id = ZEND_THIS;
 
 	intern = Z_XMLREADER_P(id);
@@ -420,6 +445,10 @@ static void php_xmlreader_no_arg_string(INTERNAL_FUNCTION_PARAMETERS, xmlreader_
 	zval *id;
 	char *retchar = NULL;
 	xmlreader_object *intern;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
 
 	id = ZEND_THIS;
 
@@ -448,7 +477,7 @@ static void php_xmlreader_set_relaxng_schema(INTERNAL_FUNCTION_PARAMETERS, int t
 	char *source;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "p!", &source, &source_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (source != NULL && !source_len) {
@@ -499,6 +528,10 @@ PHP_METHOD(xmlreader, close)
 	zval *id;
 	xmlreader_object *intern;
 
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	id = ZEND_THIS;
 	intern = Z_XMLREADER_P(id);
 	/* libxml is segfaulting in versions up to 2.6.8 using xmlTextReaderClose so for
@@ -528,7 +561,7 @@ PHP_METHOD(xmlreader, getAttributeNo)
 	xmlreader_object *intern;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &attr_pos) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = ZEND_THIS;
@@ -554,7 +587,7 @@ PHP_METHOD(xmlreader, getAttributeNs)
 	char *name, *ns_uri, *retchar = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &name, &name_len, &ns_uri, &ns_uri_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (name_len == 0 || ns_uri_len == 0) {
@@ -585,7 +618,7 @@ PHP_METHOD(xmlreader, getParserProperty)
 	xmlreader_object *intern;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &property) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = ZEND_THIS;
@@ -632,7 +665,7 @@ PHP_METHOD(xmlreader, moveToAttribute)
 	char *name;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &name, &name_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (name_len == 0) {
@@ -665,7 +698,7 @@ PHP_METHOD(xmlreader, moveToAttributeNo)
 	xmlreader_object *intern;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &attr_pos) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = ZEND_THIS;
@@ -694,7 +727,7 @@ PHP_METHOD(xmlreader, moveToAttributeNs)
 	char *name, *ns_uri;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &name, &name_len, &ns_uri, &ns_uri_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (name_len == 0 || ns_uri_len == 0) {
@@ -748,6 +781,10 @@ PHP_METHOD(xmlreader, read)
 	int retval;
 	xmlreader_object *intern;
 
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_THROWS();
+	}
+
 	id = ZEND_THIS;
 	intern = Z_XMLREADER_P(id);
 	if (intern != NULL && intern->ptr != NULL) {
@@ -775,7 +812,7 @@ PHP_METHOD(xmlreader, next)
 	char *name = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s", &name, &name_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = ZEND_THIS;
@@ -814,7 +851,7 @@ PHP_METHOD(xmlreader, open)
 	xmlTextReaderPtr reader = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "p|s!l", &source, &source_len, &encoding, &encoding_len, &options) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = getThis();
@@ -900,7 +937,7 @@ PHP_METHOD(xmlreader, setSchema)
 	char *source;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "p!", &source, &source_len) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (source != NULL && !source_len) {
@@ -942,7 +979,7 @@ PHP_METHOD(xmlreader, setParserProperty)
 	xmlreader_object *intern;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "lb", &property, &value) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = ZEND_THIS;
@@ -997,7 +1034,7 @@ PHP_METHOD(xmlreader, XML)
 	xmlTextReaderPtr reader;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|s!l", &source, &source_len, &encoding, &encoding_len, &options) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	id = getThis();
@@ -1080,7 +1117,7 @@ PHP_METHOD(xmlreader, expand)
 
 	id = ZEND_THIS;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|O!", &basenode, dom_node_class_entry) == FAILURE) {
-		return;
+		RETURN_THROWS();
 	}
 
 	if (basenode != NULL) {
@@ -1116,135 +1153,35 @@ PHP_METHOD(xmlreader, expand)
 }
 /* }}} */
 
-/* {{{ arginfo */
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_close, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_getAttribute, 0)
-	ZEND_ARG_INFO(0, name)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_getAttributeNo, 0)
-	ZEND_ARG_INFO(0, index)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_getAttributeNs, 0)
-	ZEND_ARG_INFO(0, name)
-	ZEND_ARG_INFO(0, namespaceURI)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_getParserProperty, 0)
-	ZEND_ARG_INFO(0, property)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_isValid, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_lookupNamespace, 0)
-ZEND_ARG_INFO(0, prefix)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToAttribute, 0)
-	ZEND_ARG_INFO(0, name)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToAttributeNo, 0)
-	ZEND_ARG_INFO(0, index)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToAttributeNs, 0)
-	ZEND_ARG_INFO(0, name)
-	ZEND_ARG_INFO(0, namespaceURI)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToElement, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToFirstAttribute, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_moveToNextAttribute, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_read, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_xmlreader_next, 0, 0, 0)
-	ZEND_ARG_INFO(0, localname)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_xmlreader_open, 0, 0, 1)
-	ZEND_ARG_INFO(0, URI)
-	ZEND_ARG_INFO(0, encoding)
-	ZEND_ARG_INFO(0, options)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_readInnerXml, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_readOuterXml, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_readString, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_setSchema, 0)
-	ZEND_ARG_INFO(0, filename)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_setParserProperty, 0)
-	ZEND_ARG_INFO(0, property)
-	ZEND_ARG_INFO(0, value)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_setRelaxNGSchema, 0)
-	ZEND_ARG_INFO(0, filename)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_xmlreader_setRelaxNGSchemaSource, 0)
-	ZEND_ARG_INFO(0, source)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_xmlreader_XML, 0, 0, 1)
-	ZEND_ARG_INFO(0, source)
-	ZEND_ARG_INFO(0, encoding)
-	ZEND_ARG_INFO(0, options)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_xmlreader_expand, 0, 0, 0)
-	ZEND_ARG_INFO(0, basenode)
-ZEND_END_ARG_INFO()
-/* }}} */
-
 static const zend_function_entry xmlreader_functions[] /* {{{ */ =  {
-	PHP_ME(xmlreader, close, arginfo_xmlreader_close, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, getAttribute, arginfo_xmlreader_getAttribute, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, getAttributeNo, arginfo_xmlreader_getAttributeNo, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, getAttributeNs, arginfo_xmlreader_getAttributeNs, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, getParserProperty, arginfo_xmlreader_getParserProperty, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, isValid, arginfo_xmlreader_isValid, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, lookupNamespace, arginfo_xmlreader_lookupNamespace, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToAttributeNo, arginfo_xmlreader_moveToAttributeNo, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToAttribute, arginfo_xmlreader_moveToAttribute, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToAttributeNs, arginfo_xmlreader_moveToAttributeNs, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToElement, arginfo_xmlreader_moveToElement, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToFirstAttribute, arginfo_xmlreader_moveToFirstAttribute, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, moveToNextAttribute, arginfo_xmlreader_moveToNextAttribute, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, open, arginfo_xmlreader_open, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, read, arginfo_xmlreader_read, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, next, arginfo_xmlreader_next, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, readInnerXml, arginfo_xmlreader_readInnerXml, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, readOuterXml, arginfo_xmlreader_readOuterXml, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, readString, arginfo_xmlreader_readString, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, setSchema, arginfo_xmlreader_setSchema, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, close, arginfo_class_XMLReader_close, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, getAttribute, arginfo_class_XMLReader_getAttribute, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, getAttributeNo, arginfo_class_XMLReader_getAttributeNo, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, getAttributeNs, arginfo_class_XMLReader_getAttributeNs, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, getParserProperty, arginfo_class_XMLReader_getParserProperty, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, isValid, arginfo_class_XMLReader_isValid, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, lookupNamespace, arginfo_class_XMLReader_lookupNamespace, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToAttributeNo, arginfo_class_XMLReader_moveToAttributeNo, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToAttribute, arginfo_class_XMLReader_moveToAttribute, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToAttributeNs, arginfo_class_XMLReader_moveToAttributeNs, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToElement, arginfo_class_XMLReader_moveToElement, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToFirstAttribute, arginfo_class_XMLReader_moveToFirstAttribute, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, moveToNextAttribute, arginfo_class_XMLReader_moveToNextAttribute, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, open, arginfo_class_XMLReader_open, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(xmlreader, read, arginfo_class_XMLReader_read, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, next, arginfo_class_XMLReader_next, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, readInnerXml, arginfo_class_XMLReader_readInnerXml, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, readOuterXml, arginfo_class_XMLReader_readOuterXml, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, readString, arginfo_class_XMLReader_readString, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, setSchema, arginfo_class_XMLReader_setSchema, ZEND_ACC_PUBLIC)
 /* Not Yet Implemented though defined in libxml as of 2.6.9dev
 	PHP_ME(xmlreader, resetState, NULL, ZEND_ACC_PUBLIC)
 */
-	PHP_ME(xmlreader, setParserProperty, arginfo_xmlreader_setParserProperty, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, setRelaxNGSchema, arginfo_xmlreader_setRelaxNGSchema, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, setRelaxNGSchemaSource, arginfo_xmlreader_setRelaxNGSchemaSource, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, XML, arginfo_xmlreader_XML, ZEND_ACC_PUBLIC)
-	PHP_ME(xmlreader, expand, arginfo_xmlreader_expand, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, setParserProperty, arginfo_class_XMLReader_setParserProperty, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, setRelaxNGSchema, arginfo_class_XMLReader_setRelaxNGSchema, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, setRelaxNGSchemaSource, arginfo_class_XMLReader_setRelaxNGSchemaSource, ZEND_ACC_PUBLIC)
+	PHP_ME(xmlreader, XML, arginfo_class_XMLReader_XML, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(xmlreader, expand, arginfo_class_XMLReader_expand, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 }; /* }}} */
 
@@ -1262,11 +1199,17 @@ PHP_MINIT_FUNCTION(xmlreader)
 	xmlreader_object_handlers.read_property = xmlreader_read_property;
 	xmlreader_object_handlers.write_property = xmlreader_write_property;
 	xmlreader_object_handlers.get_property_ptr_ptr = xmlreader_get_property_ptr_ptr;
+	xmlreader_object_handlers.get_method = xmlreader_get_method;
 	xmlreader_object_handlers.clone_obj = NULL;
 
 	INIT_CLASS_ENTRY(ce, "XMLReader", xmlreader_functions);
 	ce.create_object = xmlreader_objects_new;
 	xmlreader_class_entry = zend_register_internal_class(&ce);
+
+	memcpy(&xmlreader_open_fn, zend_hash_str_find_ptr(&xmlreader_class_entry->function_table, "open", sizeof("open")-1), sizeof(zend_internal_function));
+	xmlreader_open_fn.fn_flags &= ~ZEND_ACC_STATIC;
+	memcpy(&xmlreader_xml_fn, zend_hash_str_find_ptr(&xmlreader_class_entry->function_table, "xml", sizeof("xml")-1), sizeof(zend_internal_function));
+	xmlreader_xml_fn.fn_flags &= ~ZEND_ACC_STATIC;
 
 	zend_hash_init(&xmlreader_prop_handlers, 0, NULL, php_xmlreader_free_prop_handler, 1);
 	xmlreader_register_prop_handler(&xmlreader_prop_handlers, "attributeCount", xmlTextReaderAttributeCount, NULL, IS_LONG);

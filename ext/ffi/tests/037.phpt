@@ -7,14 +7,14 @@ ffi.enable=1
 --FILE--
 <?php
 function foo($ptr) {
-	$buf = FFI::new("int*[1]");
-	$buf[0] = $ptr;
-	//...
-	return $buf[0];
+    $buf = FFI::new("int*[1]");
+    $buf[0] = $ptr;
+    //...
+    return $buf[0];
 }
 
 $int = FFI::new("int");
-$int = 42;
+$int->cdata = 42;
 var_dump(foo(FFI::addr($int)));
 ?>
 --EXPECTF--

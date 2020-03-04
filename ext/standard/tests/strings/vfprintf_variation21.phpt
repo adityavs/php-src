@@ -36,47 +36,47 @@ $file_handle = fopen(__FILE__, 'r');
 //array of values to iterate over
 $values = array(
 
-		  // int data
+          // int data
 /*1*/	  0,
-		  1,
-		  12345,
-		  -2345,
+          1,
+          12345,
+          -2345,
 
-		  // float data
+          // float data
 /*5*/	  10.5,
-		  -10.5,
-		  10.1234567e10,
-		  10.7654321E-10,
-		  .5,
+          -10.5,
+          10.1234567e10,
+          10.7654321E-10,
+          .5,
 
-		  // null data
+          // null data
 /*10*/	  NULL,
-		  null,
+          null,
 
-		  // boolean data
+          // boolean data
 /*12*/	  true,
-		  false,
-		  TRUE,
-		  FALSE,
+          false,
+          TRUE,
+          FALSE,
 
-		  // empty data
+          // empty data
 /*16*/	  "",
-		  '',
+          '',
 
-		  // string data
+          // string data
 /*18*/	  "string",
-		  'string',
+          'string',
 
-		  // object data
+          // object data
 /*20*/	  new sample(),
 
-		  // undefined data
+          // undefined data
 /*21*/	  @$undefined_var,
 
-		  // unset data
+          // unset data
 /*22*/	  @$unset_var,
 
-		  // resource data
+          // resource data
 /*23*/	  $file_handle
 );
 
@@ -90,7 +90,11 @@ fprintf($fp, "\n*** Testing vprintf() with unexpected values for args argument *
 $counter = 1;
 foreach( $values as $value ) {
   fprintf($fp, "\n-- Iteration %d --\n",$counter);
-  vfprintf($fp, $format, $value);
+  try {
+    vfprintf($fp, $format, $value);
+  } catch (\ValueError $e) {
+    fwrite($fp, $e->getMessage() . "\n");
+  }
   $counter++;
 }
 
@@ -102,19 +106,8 @@ unlink($data_file);
 
 
 ?>
-===DONE===
 --EXPECTF--
 *** Testing vfprintf() : with unexpected values for args argument ***
-
-Warning: vfprintf(): Too few arguments in %s on line %d
-
-Warning: vfprintf(): Too few arguments in %s on line %d
-
-Warning: vfprintf(): Too few arguments in %s on line %d
-
-Warning: vfprintf(): Too few arguments in %s on line %d
-
-Warning: vfprintf(): Too few arguments in %s on line %d
 
 *** Testing vprintf() with unexpected values for args argument ***
 
@@ -137,8 +130,10 @@ Warning: vfprintf(): Too few arguments in %s on line %d
 -- Iteration 9 --
 0.5
 -- Iteration 10 --
+The arguments array must contain 1 items, 0 given
 
 -- Iteration 11 --
+The arguments array must contain 1 items, 0 given
 
 -- Iteration 12 --
 1
@@ -157,11 +152,13 @@ string
 -- Iteration 19 --
 string
 -- Iteration 20 --
+The arguments array must contain 1 items, 0 given
 
 -- Iteration 21 --
+The arguments array must contain 1 items, 0 given
 
 -- Iteration 22 --
+The arguments array must contain 1 items, 0 given
 
 -- Iteration 23 --
 Resource id #%d
-===DONE===

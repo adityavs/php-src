@@ -83,20 +83,20 @@ for($index = 0; $index < count($values); $index ++) {
   $haystack = $values[$index];
   try {
     var_dump( stripos($values[$index], $values[$index]) );
-  } catch (TypeError $e) {
-    echo $e->getMessage(), "\n";
+  } catch (Error $e) {
+    echo get_class($e) . ": " . $e->getMessage(), "\n";
   }
   try {
     var_dump( stripos($values[$index], $values[$index], 1) );
-  } catch (TypeError $e) {
-    echo $e->getMessage(), "\n";
+  } catch (Error $e) {
+    echo get_class($e) . ": " . $e->getMessage(), "\n";
   }
   $counter ++;
 }
 
 echo "*** Done ***";
 ?>
---EXPECTF--
+--EXPECT--
 *** Testing stripos() function with unexpected values for haystack and needle ***
 -- Iteration 1 --
 int(0)
@@ -126,70 +126,54 @@ bool(false)
 int(0)
 bool(false)
 -- Iteration 10 --
-stripos() expects parameter 1 to be string, array given
-stripos() expects parameter 1 to be string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
 -- Iteration 11 --
-stripos() expects parameter 1 to be string, array given
-stripos() expects parameter 1 to be string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
 -- Iteration 12 --
-stripos() expects parameter 1 to be string, array given
-stripos() expects parameter 1 to be string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
 -- Iteration 13 --
-stripos() expects parameter 1 to be string, array given
-stripos() expects parameter 1 to be string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
 -- Iteration 14 --
-stripos() expects parameter 1 to be string, array given
-stripos() expects parameter 1 to be string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, array given
 -- Iteration 15 --
 int(0)
 bool(false)
 -- Iteration 16 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 17 --
 int(0)
 bool(false)
 -- Iteration 18 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 19 --
 int(0)
 bool(false)
 -- Iteration 20 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 21 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 22 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 23 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 24 --
-stripos() expects parameter 1 to be string, resource given
-stripos() expects parameter 1 to be string, resource given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, resource given
+TypeError: stripos(): Argument #1 ($haystack) must be of type string, resource given
 -- Iteration 25 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 -- Iteration 26 --
-bool(false)
-
-Warning: stripos(): Offset not contained in string in %s on line %d
-bool(false)
+int(0)
+ValueError: Offset not contained in string
 *** Done ***

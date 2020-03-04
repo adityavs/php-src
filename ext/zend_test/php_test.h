@@ -1,7 +1,5 @@
 /*
   +----------------------------------------------------------------------+
-  | PHP Version 7                                                        |
-  +----------------------------------------------------------------------+
   | Copyright (c) The PHP Group                                          |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
@@ -31,5 +29,12 @@ extern zend_module_entry zend_test_module_entry;
 #if defined(ZTS) && defined(COMPILE_DL_ZEND_TEST)
 ZEND_TSRMLS_CACHE_EXTERN()
 #endif
+
+struct bug79096 {
+	uint64_t a;
+	uint64_t b;
+};
+
+ZEND_API struct bug79096 bug79096(void);
 
 #endif

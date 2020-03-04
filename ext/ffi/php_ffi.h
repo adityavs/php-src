@@ -1,7 +1,5 @@
 /*
    +----------------------------------------------------------------------+
-   | PHP Version 7                                                        |
-   +----------------------------------------------------------------------+
    | Copyright (c) The PHP Group                                          |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
@@ -38,6 +36,7 @@ ZEND_BEGIN_MODULE_GLOBALS(ffi)
 	HashTable types;
 
 	/* preloading */
+	char *preload;
 	HashTable *scopes;           /* list of preloaded scopes */
 
 	/* callbacks */
@@ -131,6 +130,7 @@ ZEND_EXTERN_MODULE_GLOBALS(ffi)
 #define	ZEND_FFI_ABI_REGISTER       6  // FFI_REGISTER
 #define	ZEND_FFI_ABI_MS             7  // FFI_MS_CDECL
 #define	ZEND_FFI_ABI_SYSV           8  // FFI_SYSV
+#define ZEND_FFI_ABI_VECTORCALL     9  // FFI_VECTORCALL
 
 #define ZEND_FFI_ATTR_CONST             (1<<0)
 #define ZEND_FFI_ATTR_INCOMPLETE_TAG    (1<<1)
@@ -224,7 +224,7 @@ void zend_ffi_add_bit_field(zend_ffi_dcl *struct_dcl, const char *name, size_t n
 void zend_ffi_adjust_struct_size(zend_ffi_dcl *dcl);
 void zend_ffi_make_pointer_type(zend_ffi_dcl *dcl);
 void zend_ffi_make_array_type(zend_ffi_dcl *dcl, zend_ffi_val *len);
-void zend_ffi_make_func_type(zend_ffi_dcl *dcl, HashTable *args);
+void zend_ffi_make_func_type(zend_ffi_dcl *dcl, HashTable *args, zend_ffi_dcl *nested_dcl);
 void zend_ffi_add_arg(HashTable **args, const char *name, size_t name_len, zend_ffi_dcl *arg_dcl);
 void zend_ffi_declare(const char *name, size_t name_len, zend_ffi_dcl *dcl);
 void zend_ffi_add_attribute(zend_ffi_dcl *dcl, const char *name, size_t name_len);

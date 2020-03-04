@@ -16,7 +16,11 @@ echo "-- With empty heredoc string --\n";
 $empty_string = <<<EOD
 EOD;
 var_dump( strrpos($empty_string, "") );
-var_dump( strrpos($empty_string, "", 1) );
+try {
+    strrpos($empty_string, "", 1);
+} catch (ValueError $exception) {
+    echo $exception->getMessage() . "\n";
+}
 var_dump( strrpos($empty_string, FALSE) );
 var_dump( strrpos($empty_string, NULL) );
 
@@ -25,8 +29,8 @@ echo "*** Done ***";
 --EXPECT--
 *** Testing strrpos() function: with heredoc strings ***
 -- With empty heredoc string --
-bool(false)
-bool(false)
-bool(false)
-bool(false)
+int(0)
+Offset not contained in string
+int(0)
+int(0)
 *** Done ***
