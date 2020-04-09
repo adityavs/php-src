@@ -22,7 +22,7 @@
 #include "php.h"
 #if HAVE_LIBXML && HAVE_DOM
 #include "php_dom.h"
-#include "dom_arginfo.h"
+#include "xpath_arginfo.h"
 
 #define PHP_DOM_XPATH_QUERY 0
 #define PHP_DOM_XPATH_EVALUATE 1
@@ -503,12 +503,10 @@ PHP_METHOD(domxpath, evaluate)
 /* {{{ proto void dom_xpath_register_php_functions() */
 PHP_METHOD(domxpath, registerPhpFunctions)
 {
-	zval *id;
+	zval *id = ZEND_THIS;
 	dom_xpath_object *intern;
 	zval *array_value, *entry, new_string;
 	zend_string *name;
-
-	DOM_GET_THIS(id);
 
 	if (zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, ZEND_NUM_ARGS(), "a",  &array_value) == SUCCESS) {
 		intern = Z_XPATHOBJ_P(id);

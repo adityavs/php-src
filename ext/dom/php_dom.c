@@ -520,11 +520,6 @@ static void dom_dtor_prop_handler(zval *zv) /* {{{ */
 	free(Z_PTR_P(zv));
 }
 
-static const zend_function_entry dom_functions[] = {
-	PHP_FE(dom_import_simplexml, arginfo_dom_import_simplexml)
-	PHP_FE_END
-};
-
 static const zend_module_dep dom_deps[] = {
 	ZEND_MOD_REQUIRED("libxml")
 	ZEND_MOD_CONFLICTS("domxml")
@@ -535,7 +530,7 @@ zend_module_entry dom_module_entry = { /* {{{ */
 	STANDARD_MODULE_HEADER_EX, NULL,
 	dom_deps,
 	"dom",
-	dom_functions,
+	ext_functions,
 	PHP_MINIT(dom),
 	PHP_MSHUTDOWN(dom),
 	NULL,
@@ -1306,6 +1301,14 @@ xmlNode *dom_get_elements_by_tag_name_ns_raw(xmlNodePtr nodep, char *ns, char *l
 /* }}} */
 /* }}} end dom_element_get_elements_by_tag_name_ns_raw */
 
+static inline zend_bool is_empty_node(xmlNodePtr nodep)
+{
+	xmlChar	*strContent = xmlNodeGetContent(nodep);
+	zend_bool ret = strContent == NULL || *strContent == '\0';
+	xmlFree(strContent);
+	return ret;
+}
+
 /* {{{ void dom_normalize (xmlNodePtr nodep) */
 void dom_normalize (xmlNodePtr nodep)
 {
@@ -1330,6 +1333,13 @@ void dom_normalize (xmlNodePtr nodep)
 					} else {
 						break;
 					}
+				}
+				if (is_empty_node(child)) {
+					nextp = child->next;
+					xmlUnlinkNode(child);
+					php_libxml_node_free_resource(child);
+					child = nextp;
+					continue;
 				}
 				break;
 			case XML_ELEMENT_NODE:

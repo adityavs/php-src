@@ -267,8 +267,10 @@ static void zend_ssa_remove_nops(zend_op_array *op_array, zend_ssa *ssa, zend_op
 			while (call_info) {
 				call_info->caller_init_opline -=
 					shiftlist[call_info->caller_init_opline - op_array->opcodes];
-				call_info->caller_call_opline -=
-					shiftlist[call_info->caller_call_opline - op_array->opcodes];
+				if (call_info->caller_call_opline) {
+					call_info->caller_call_opline -=
+						shiftlist[call_info->caller_call_opline - op_array->opcodes];
+				}
 				call_info = call_info->next_callee;
 			}
 		}
@@ -367,7 +369,8 @@ int zend_dfa_optimize_calls(zend_op_array *op_array, zend_ssa *ssa)
 		zend_call_info *call_info = func_info->callee_info;
 
 		do {
-			if (call_info->caller_call_opline->opcode == ZEND_DO_ICALL
+			if (call_info->caller_call_opline
+			 && call_info->caller_call_opline->opcode == ZEND_DO_ICALL
 			 && call_info->callee_func
 			 && ZSTR_LEN(call_info->callee_func->common.function_name) == sizeof("in_array")-1
 			 && memcmp(ZSTR_VAL(call_info->callee_func->common.function_name), "in_array", sizeof("in_array")-1) == 0
@@ -989,6 +992,7 @@ void zend_dfa_optimize_op_array(zend_op_array *op_array, zend_optimizer_ctx *ctx
 		int v;
 		int remove_nops = 0;
 		zend_op *opline;
+		zend_ssa_op *ssa_op;
 		zval tmp;
 
 #if ZEND_DEBUG_DFA
@@ -1044,6 +1048,7 @@ void zend_dfa_optimize_op_array(zend_op_array *op_array, zend_optimizer_ctx *ctx
 			}
 
 			opline = op_array->opcodes + op_1;
+			ssa_op = &ssa->ops[op_1];
 
 			/* Convert LONG constants to DOUBLE */
 			if (ssa->var_info[v].use_as_double) {

@@ -65,6 +65,16 @@ typedef enum _zend_reg {
 	ZREG_NUM
 } zend_reg;
 
+typedef struct _zend_jit_registers_buf {
+#if defined(__x86_64__) || defined(_WIN64)
+	uint64_t r[16];
+	double xmm[16];
+#else
+	uint32_t r[8];
+	double xmm[8];
+#endif
+} zend_jit_registers_buf;
+
 #define	ZREG_RAX ZREG_R0
 #define	ZREG_RCX ZREG_R1
 #define	ZREG_RDX ZREG_R2
@@ -236,12 +246,12 @@ typedef uintptr_t zend_jit_addr;
 	 ((last_use) ? (1 << (_ZEND_ADDR_REG_LAST_USE_BIT-_ZEND_ADDR_REG_SHIFT)) : 0) \
 	)
 
-#define OP_REG(line, op) \
-	(ra && ssa->ops[line].op >= 0 && ra[ssa->ops[line].op] ? \
-		OP_REG_EX(ra[ssa->ops[line].op]->reg, \
-			ra[ssa->ops[line].op]->store, \
-			ra[ssa->ops[line].op]->load, \
-			zend_ssa_is_last_use(op_array, ssa, ssa->ops[line].op, line) \
+#define OP_REG(ssa_op, op) \
+	(ra && ssa_op->op >= 0 && ra[ssa_op->op] ? \
+		OP_REG_EX(ra[ssa_op->op]->reg, \
+			(ra[ssa_op->op]->flags & ZREG_STORE), \
+			(ra[ssa_op->op]->flags & ZREG_LOAD), \
+			zend_ival_is_last_use(ra[ssa_op->op], ssa_op - ssa->ops) \
 		) : ZREG_NONE)
 
 static zend_always_inline zend_jit_addr _zend_jit_decode_op(zend_uchar op_type, znode_op op, const zend_op *opline, zend_reg reg)
@@ -270,13 +280,13 @@ static zend_always_inline zend_jit_addr _zend_jit_decode_op(zend_uchar op_type, 
 #define OP2_ADDR() \
 	OP_ADDR(opline, op2_type, op2)
 #define RES_ADDR() \
-	OP_ADDR(opline, op2_type, op2)
+	OP_ADDR(opline, result_type, result)
 #define OP1_DATA_ADDR() \
 	OP_ADDR(opline + 1, op1_type, op1)
 
-#define OP_REG_ADDR(opline, type, op, ssa_op) \
-	_zend_jit_decode_op((opline)->type, (opline)->op, opline, \
-		OP_REG((opline) - op_array->opcodes, ssa_op))
+#define OP_REG_ADDR(opline, type, _op, _ssa_op) \
+	_zend_jit_decode_op((opline)->type, (opline)->_op, opline, \
+		OP_REG(ssa_op, _ssa_op))
 
 #define OP1_REG_ADDR() \
 	OP_REG_ADDR(opline, op1_type, op1, op1_use)

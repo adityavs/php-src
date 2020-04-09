@@ -397,6 +397,7 @@ resolv.h \
 strings.h \
 syslog.h \
 sysexits.h \
+sys/auxv.h \
 sys/ioctl.h \
 sys/file.h \
 sys/mman.h \
@@ -572,7 +573,6 @@ inet_ntop \
 inet_pton \
 localtime_r \
 lchown \
-mbrlen \
 memmove \
 mkstemp \
 mmap \
@@ -581,8 +581,6 @@ nl_langinfo \
 poll \
 ptsname \
 putenv \
-realpath \
-rand_r \
 scandir \
 setitimer \
 setenv \

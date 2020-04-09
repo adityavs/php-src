@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 function gd_info(): array {}
 
 function imageloadfont(string $filename): int|false {}
@@ -209,7 +211,7 @@ function imagefttext(GdImage $im, float $size, float $angle, int $x, int $y, int
 
 function imagettfbbox(float $size, float $angle, string $font_file, string $text): array|false {}
 
-function imagettftext(GdImage $im, float $size, float $angle, int $x, int $y, int $col, string $font_file, string $text) {}
+function imagettftext(GdImage $im, float $size, float $angle, int $x, int $y, int $col, string $font_file, string $text): array|false {}
 #endif
 
 function imagefilter(GdImage $im, int $filtertype, $arg1 = UNKNOWN, $arg2 = UNKNOWN, $arg3 = UNKNOWN, $arg4 = UNKNOWN): bool {}
@@ -234,6 +236,6 @@ function imageaffinematrixconcat(array $m1, array $m2): array|false {}
 
 function imagegetinterpolation(GdImage $im): int {}
 
-function imagesetinterpolation(GdImage $im, int $method = IMG_BILENEAR_FIXED): bool {}
+function imagesetinterpolation(GdImage $im, int $method = IMG_BILINEAR_FIXED): bool {}
 
 function imageresolution(GdImage $im, int $res_x = UNKNOWN, int $res_y = UNKNOWN): array|bool {}

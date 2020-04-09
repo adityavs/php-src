@@ -60,10 +60,10 @@ abstract class ReflectionFunctionAbstract implements Reflector
     /** @return string|false */
     public function getFileName() {}
 
-    /** @return string|false */
+    /** @return string */
     public function getName() {}
 
-    /** @return string|false */
+    /** @return string */
     public function getNamespaceName() {}
 
     /** @return int */
@@ -75,7 +75,7 @@ abstract class ReflectionFunctionAbstract implements Reflector
     /** @return ReflectionParameter[] */
     public function getParameters() {}
 
-    /** @return string|false */
+    /** @return string */
     public function getShortName() {}
 
     /** @return int|false */
@@ -104,8 +104,10 @@ class ReflectionFunction extends ReflectionFunctionAbstract
     /** @return bool */
     public function isDisabled() {}
 
+    /** @return mixed */
     public function invoke(...$args) {}
 
+    /** @return mixed */
     public function invokeArgs(array $args) {}
 
     /** @return Closure */
@@ -172,8 +174,10 @@ class ReflectionMethod extends ReflectionFunctionAbstract
     /** @return int */
     public function getModifiers() {}
 
+    /** @return mixed */
     public function invoke(?object $object = null, ...$args) {}
 
+    /** @return mixed */
     public function invokeArgs(?object $object, array $args) {}
 
     /** @return ReflectionClass */
@@ -195,7 +199,7 @@ class ReflectionClass implements Reflector
 
     public function __toString(): string {}
 
-    /** @return string|false */
+    /** @return string */
     public function getName() {}
 
     /** @return bool */
@@ -255,6 +259,7 @@ class ReflectionClass implements Reflector
     /** @return ReflectionClassConstant[] */
     public function getReflectionConstants() {}
 
+    /** @return mixed */
     public function getConstant(string $name) {}
 
     /** @return ReflectionClassConstant|false */
@@ -314,6 +319,7 @@ class ReflectionClass implements Reflector
     /** @return ?array */
     public function getStaticProperties() {}
 
+    /** @return mixed */
     public function getStaticPropertyValue(string $name, $default = UNKNOWN) {}
 
     /** @return void */
@@ -343,10 +349,10 @@ class ReflectionClass implements Reflector
     /** @return bool */
     public function inNamespace() {}
 
-    /** @return string|false */
+    /** @return string */
     public function getNamespaceName() {}
 
-    /** @return string|false */
+    /** @return string */
     public function getShortName() {}
 }
 
@@ -364,9 +370,10 @@ class ReflectionProperty implements Reflector
 
     public function __toString(): string {}
 
-    /** @return string|false */
+    /** @return string */
     public function getName() {}
 
+    /** @return mixed */
     public function getValue(?object $object = null) {}
 
     /** @return void */
@@ -426,6 +433,7 @@ class ReflectionClassConstant implements Reflector
     /** @return string|false */
     public function getName() {}
 
+    /** @return mixed */
     public function getValue() {}
 
     /** @return bool */
@@ -459,7 +467,7 @@ class ReflectionParameter implements Reflector
 
     public function __toString(): string {}
 
-    /** @return string|false */
+    /** @return string */
     public function getName() {}
 
     /** @return bool */
@@ -501,6 +509,7 @@ class ReflectionParameter implements Reflector
     /** @return bool */
     public function isDefaultValueAvailable() {}
 
+    /** @return mixed */
     public function getDefaultValue() {}
 
     /** @return bool */
@@ -545,7 +554,7 @@ class ReflectionExtension implements Reflector
 
     public function __toString(): string {}
 
-    /** @return string|false */
+    /** @return string */
     public function getName() {}
 
     /** @return ?string */

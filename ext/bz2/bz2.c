@@ -25,7 +25,6 @@
 #if HAVE_BZ2
 
 /* PHP Includes */
-#include "ext/standard/file.h"
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
 #include "main/php_network.h"
@@ -41,32 +40,11 @@
 static PHP_MINIT_FUNCTION(bz2);
 static PHP_MSHUTDOWN_FUNCTION(bz2);
 static PHP_MINFO_FUNCTION(bz2);
-static PHP_FUNCTION(bzopen);
-static PHP_FUNCTION(bzread);
-static PHP_FUNCTION(bzerrno);
-static PHP_FUNCTION(bzerrstr);
-static PHP_FUNCTION(bzerror);
-static PHP_FUNCTION(bzcompress);
-static PHP_FUNCTION(bzdecompress);
-
-static const zend_function_entry bz2_functions[] = {
-	PHP_FE(bzopen,       arginfo_bzopen)
-	PHP_FE(bzread,       arginfo_bzread)
-	PHP_FALIAS(bzwrite,   fwrite,		arginfo_bzwrite)
-	PHP_FALIAS(bzflush,   fflush,		arginfo_bzflush)
-	PHP_FALIAS(bzclose,   fclose,		arginfo_bzclose)
-	PHP_FE(bzerrno,      arginfo_bzerrno)
-	PHP_FE(bzerrstr,     arginfo_bzerrstr)
-	PHP_FE(bzerror,      arginfo_bzerror)
-	PHP_FE(bzcompress,   arginfo_bzcompress)
-	PHP_FE(bzdecompress, arginfo_bzdecompress)
-	PHP_FE_END
-};
 
 zend_module_entry bz2_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"bz2",
-	bz2_functions,
+	ext_functions,
 	PHP_MINIT(bz2),
 	PHP_MSHUTDOWN(bz2),
 	NULL,
@@ -325,7 +303,7 @@ static PHP_MINFO_FUNCTION(bz2)
 
 /* {{{ proto string bzread(resource bz[, int length])
    Reads up to length bytes from a BZip2 stream, or 1024 bytes if length is not specified */
-static PHP_FUNCTION(bzread)
+PHP_FUNCTION(bzread)
 {
 	zval *bz;
 	zend_long len = 1024;
@@ -339,7 +317,7 @@ static PHP_FUNCTION(bzread)
 	php_stream_from_zval(stream, bz);
 
 	if (len  < 0) {
-		zend_value_error("Length cannot be negative");
+		zend_argument_value_error(2, "must be greater than or equal to 0");
 		RETURN_THROWS();
 	}
 
@@ -353,7 +331,7 @@ static PHP_FUNCTION(bzread)
 
 /* {{{ proto resource bzopen(string|int file|fp, string mode)
    Opens a new BZip2 stream */
-static PHP_FUNCTION(bzopen)
+PHP_FUNCTION(bzopen)
 {
 	zval     *file;   /* The file to open */
 	char     *mode;   /* The mode to open the stream with */
@@ -367,7 +345,7 @@ static PHP_FUNCTION(bzopen)
 	}
 
 	if (mode_len != 1 || (mode[0] != 'r' && mode[0] != 'w')) {
-		zend_value_error("'%s' is not a valid mode for bzopen(). Only 'w' and 'r' are supported.", mode);
+		zend_argument_value_error(2, "must be a valid mode. Only 'w' and 'r' are supported");
 		RETURN_THROWS();
 	}
 
@@ -379,7 +357,7 @@ static PHP_FUNCTION(bzopen)
 		}
 
 		if (CHECK_ZVAL_NULL_PATH(file)) {
-			zend_type_error("Filename must not contain null bytes");
+			zend_argument_type_error(1, "must not contain null bytes");
 			RETURN_THROWS();
 		}
 
@@ -430,7 +408,7 @@ static PHP_FUNCTION(bzopen)
 
 		stream = php_stream_bz2open_from_BZFILE(bz, mode, stream);
 	} else {
-		zend_type_error("First parameter has to be string or file-resource");
+		zend_argument_type_error(1, "must be of type string or file-resource, %s given", zend_zval_type_name(file));
 		RETURN_THROWS();
 	}
 
@@ -444,7 +422,7 @@ static PHP_FUNCTION(bzopen)
 
 /* {{{ proto int bzerrno(resource bz)
    Returns the error number */
-static PHP_FUNCTION(bzerrno)
+PHP_FUNCTION(bzerrno)
 {
 	php_bz2_error(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_BZ_ERRNO);
 }
@@ -452,7 +430,7 @@ static PHP_FUNCTION(bzerrno)
 
 /* {{{ proto string bzerrstr(resource bz)
    Returns the error string */
-static PHP_FUNCTION(bzerrstr)
+PHP_FUNCTION(bzerrstr)
 {
 	php_bz2_error(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_BZ_ERRSTR);
 }
@@ -460,7 +438,7 @@ static PHP_FUNCTION(bzerrstr)
 
 /* {{{ proto array bzerror(resource bz)
    Returns the error number and error string in an associative array */
-static PHP_FUNCTION(bzerror)
+PHP_FUNCTION(bzerror)
 {
 	php_bz2_error(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_BZ_ERRBOTH);
 }
@@ -468,7 +446,7 @@ static PHP_FUNCTION(bzerror)
 
 /* {{{ proto string bzcompress(string source [, int blocksize100k [, int workfactor]])
    Compresses a string into BZip2 encoded data */
-static PHP_FUNCTION(bzcompress)
+PHP_FUNCTION(bzcompress)
 {
 	char             *source;          /* Source data to compress */
 	zend_long              zblock_size = 0; /* Optional block size to use */
@@ -519,7 +497,7 @@ static PHP_FUNCTION(bzcompress)
 
 /* {{{ proto string bzdecompress(string source [, int small])
    Decompresses BZip2 compressed data */
-static PHP_FUNCTION(bzdecompress)
+PHP_FUNCTION(bzdecompress)
 {
 	char *source;
 	zend_string *dest;

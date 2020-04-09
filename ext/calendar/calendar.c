@@ -35,33 +35,10 @@
 #undef CAL_GREGORIAN
 #endif
 
-static const zend_function_entry calendar_functions[] = {
-	PHP_FE(jdtogregorian, arginfo_jdtogregorian)
-	PHP_FE(gregoriantojd, arginfo_gregoriantojd)
-	PHP_FE(jdtojulian, arginfo_jdtojulian)
-	PHP_FE(juliantojd, arginfo_juliantojd)
-	PHP_FE(jdtojewish, arginfo_jdtojewish)
-	PHP_FE(jewishtojd, arginfo_jewishtojd)
-	PHP_FE(jdtofrench, arginfo_jdtofrench)
-	PHP_FE(frenchtojd, arginfo_frenchtojd)
-	PHP_FE(jddayofweek, arginfo_jddayofweek)
-	PHP_FE(jdmonthname, arginfo_jdmonthname)
-	PHP_FE(easter_date, arginfo_easter_date)
-	PHP_FE(easter_days, arginfo_easter_days)
-	PHP_FE(unixtojd, arginfo_unixtojd)
-	PHP_FE(jdtounix, arginfo_jdtounix)
-	PHP_FE(cal_to_jd, arginfo_cal_to_jd)
-	PHP_FE(cal_from_jd, arginfo_cal_from_jd)
-	PHP_FE(cal_days_in_month, arginfo_cal_days_in_month)
-	PHP_FE(cal_info, arginfo_cal_info)
-	PHP_FE_END
-};
-
-
 zend_module_entry calendar_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"calendar",
-	calendar_functions,
+	ext_functions,
 	PHP_MINIT(calendar),
 	NULL,
 	NULL,
@@ -217,7 +194,7 @@ PHP_FUNCTION(cal_info)
 
 
 	if (cal != -1 && (cal < 0 || cal >= CAL_NUM_CALS)) {
-		zend_value_error("Invalid calendar ID: " ZEND_LONG_FMT, cal);
+		zend_argument_value_error(1, "must be a valid calendar ID");
 		RETURN_THROWS();
 	}
 
@@ -239,7 +216,7 @@ PHP_FUNCTION(cal_days_in_month)
 	}
 
 	if (cal < 0 || cal >= CAL_NUM_CALS) {
-		zend_value_error("Invalid calendar ID: " ZEND_LONG_FMT, cal);
+		zend_argument_value_error(1, "must be a valid calendar ID");
 		RETURN_THROWS();
 	}
 
@@ -285,7 +262,7 @@ PHP_FUNCTION(cal_to_jd)
 	}
 
 	if (cal < 0 || cal >= CAL_NUM_CALS) {
-		zend_value_error("Invalid calendar ID: " ZEND_LONG_FMT, cal);
+		zend_argument_value_error(1, "must be a valid calendar ID");
 		RETURN_THROWS();
 	}
 
@@ -306,7 +283,7 @@ PHP_FUNCTION(cal_from_jd)
 	}
 
 	if (cal < 0 || cal >= CAL_NUM_CALS) {
-		zend_value_error("Invalid calendar ID: " ZEND_LONG_FMT, cal);
+		zend_argument_value_error(2, "must be a valid calendar ID");
 		RETURN_THROWS();
 	}
 	calendar = &cal_conversion_table[cal];

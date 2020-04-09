@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 function openssl_x509_export_to_file($x509, string $outfilename, bool $notext = true): bool {}
 
 function openssl_x509_export($x509 , &$out, bool $notext = true): bool {}
@@ -77,13 +79,17 @@ function openssl_pkey_get_public($cert) {}
 /**
  * @param resource|string|array $cert
  * @return resource|false
+ * @alias openssl_pkey_get_public
  */
 function openssl_get_publickey($cert) {}
 
 /** @param resource $key */
 function openssl_pkey_free($key): void {}
 
-/** @param resource $key */
+/**
+ * @param resource $key
+ * @alias openssl_pkey_free
+ */
 function openssl_free_key($key): void {}
 
 /**
@@ -95,6 +101,7 @@ function openssl_pkey_get_private($key, string $passphrase = UNKNOWN) {}
 /**
  * @param resource|string|array $key
  * @return resource|false
+ * @alias openssl_pkey_get_private
  */
 function openssl_get_privatekey($key, string $passphrase = UNKNOWN) {}
 

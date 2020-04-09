@@ -1,7 +1,5 @@
 <?php
 
-/* ext/spl/php_spl.c */
-
 function class_implements($what, bool $autoload = true): array|false {}
 
 function class_parents($instance, bool $autoload = true): array|false {}
@@ -17,7 +15,7 @@ function spl_autoload_extensions(string $file_extensions = UNKNOWN): string {}
 
 function spl_autoload_functions(): array|false {}
 
-function spl_autoload_register($autoload_function = null, bool $throw = true, bool $prepend = false): bool {}
+function spl_autoload_register($autoload_function = UNKNOWN, bool $throw = true, bool $prepend = false): bool {}
 
 function spl_autoload_unregister($autoload_function): bool {}
 
@@ -27,7 +25,6 @@ function spl_object_hash(object $obj): string {}
 
 function spl_object_id(object $obj): int {}
 
-/* ext/spl/spl_iterators.c */
 function iterator_apply(Traversable $iterator, callable $function, ?array $args = null): int {}
 
 function iterator_count(Traversable $iterator): int {}

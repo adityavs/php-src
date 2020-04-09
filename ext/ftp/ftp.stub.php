@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 /** @return resource|false */
 function ftp_connect(string $host, int $port = 21, int $timeout = 90) {}
 
@@ -113,7 +115,10 @@ function ftp_site($ftp, string $cmd): bool {}
 /** @param resource $ftp */
 function ftp_close($ftp): bool {}
 
-/** @param resource $ftp */
+/**
+ * @param resource $ftp
+ * @alias ftp_close
+ */
 function ftp_quit($ftp): bool {}
 
 /** @param resource $ftp */

@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 /** @param int|bool|string $number */
 function gmp_init($number, int $base = 0): GMP|false {}
 
@@ -53,6 +55,7 @@ function gmp_div_r($a, $b, int $round = GMP_ROUND_ZERO): GMP|false {}
 /**
  * @param GMP|int|bool|string $a
  * @param GMP|int|bool|string $b
+ * @alias gmp_div_q
  */
 function gmp_div($a, $b, int $round = GMP_ROUND_ZERO): GMP|false {}
 

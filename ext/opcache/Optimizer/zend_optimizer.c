@@ -54,45 +54,8 @@ int zend_optimizer_eval_binary_op(zval *result, zend_uchar opcode, zval *op1, zv
 	binary_op_type binary_op = get_binary_op(opcode);
 	int er, ret;
 
-	if (zend_binary_op_produces_numeric_string_error(opcode, op1, op2)) {
-		/* produces numeric string E_NOTICE/E_WARNING */
+	if (zend_binary_op_produces_error(opcode, op1, op2)) {
 		return FAILURE;
-	}
-
-	switch (opcode) {
-		case ZEND_ADD:
-			if ((Z_TYPE_P(op1) == IS_ARRAY
-			  || Z_TYPE_P(op2) == IS_ARRAY)
-			 && Z_TYPE_P(op1) != Z_TYPE_P(op2)) {
-				/* produces "Unsupported operand types" exception */
-				return FAILURE;
-			}
-			break;
-		case ZEND_DIV:
-		case ZEND_MOD:
-			if (zval_get_long(op2) == 0) {
-				/* division by 0 */
-				return FAILURE;
-			}
-			/* break missing intentionally */
-		case ZEND_SUB:
-		case ZEND_MUL:
-		case ZEND_POW:
-		case ZEND_CONCAT:
-		case ZEND_FAST_CONCAT:
-			if (Z_TYPE_P(op1) == IS_ARRAY
-			 || Z_TYPE_P(op2) == IS_ARRAY) {
-				/* produces "Unsupported operand types" exception */
-				return FAILURE;
-			}
-			break;
-		case ZEND_SL:
-		case ZEND_SR:
-			if (zval_get_long(op2) < 0) {
-				/* shift by negative number */
-				return FAILURE;
-			}
-			break;
 	}
 
 	er = EG(error_reporting);
@@ -1214,6 +1177,7 @@ static void zend_redo_pass_two_ex(zend_op_array *op_array, zend_ssa *ssa)
 	opline = op_array->opcodes;
 	end = opline + op_array->last;
 	while (opline < end) {
+		zend_ssa_op *ssa_op = &ssa->ops[opline - op_array->opcodes];
 		uint32_t op1_info = opline->op1_type == IS_UNUSED ? 0 : (OP1_INFO() & (MAY_BE_UNDEF|MAY_BE_ANY|MAY_BE_REF|MAY_BE_ARRAY_OF_ANY|MAY_BE_ARRAY_KEY_ANY));
 		uint32_t op2_info = opline->op1_type == IS_UNUSED ? 0 : (OP2_INFO() & (MAY_BE_UNDEF|MAY_BE_ANY|MAY_BE_REF|MAY_BE_ARRAY_OF_ANY|MAY_BE_ARRAY_KEY_ANY));
 		uint32_t res_info =

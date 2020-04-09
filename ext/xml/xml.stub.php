@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 function xml_parser_create(string $encoding = UNKNOWN): XmlParser|false {}
 
 function xml_parser_create_ns(string $encoding = UNKNOWN, string $sep = ':'): XmlParser|false {}
@@ -54,4 +56,4 @@ function xml_parser_free(XmlParser $parser): bool {}
 
 function xml_parser_set_option(XmlParser $parser, int $option, $value): bool {}
 
-function xml_parser_get_option(XmlParser $parser, int $option) {}
+function xml_parser_get_option(XmlParser $parser, int $option): string|int|false {}

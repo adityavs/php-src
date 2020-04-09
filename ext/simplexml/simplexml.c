@@ -990,7 +990,7 @@ static void _get_base_node_value(php_sxe_object *sxe_ref, xmlNodePtr node, zval 
 	php_sxe_object *subnode;
 	xmlChar        *contents;
 
-	if (node->children && node->children->type == XML_TEXT_NODE && !xmlIsBlankNode(node->children)) {
+	if ((!node->properties || node->type == XML_ENTITY_DECL) && node->children && node->children->type == XML_TEXT_NODE && !xmlIsBlankNode(node->children)) {
 		contents = xmlNodeListGetString(node->doc, node->children, 1);
 		if (contents) {
 			ZVAL_STRING(value, (char *)contents);
@@ -1291,16 +1291,24 @@ static int sxe_objects_compare(zval *object1, zval *object2) /* {{{ */
 	sxe1 = Z_SXEOBJ_P(object1);
 	sxe2 = Z_SXEOBJ_P(object2);
 
-	if (sxe1->node == NULL) {
-		if (sxe2->node) {
-			return 1;
-		} else if (sxe1->document->ptr == sxe2->document->ptr) {
+	if (sxe1->node != NULL && sxe2->node != NULL) {
+		/* Both nodes set: Only support equality comparison between nodes. */
+		if (sxe1->node == sxe2->node) {
 			return 0;
 		}
-	} else {
-		return !(sxe1->node == sxe2->node);
+		return ZEND_UNCOMPARABLE;
 	}
-	return 1;
+
+	if (sxe1->node == NULL && sxe2->node == NULL) {
+		/* Both nodes not set: Only support equality comparison between documents. */
+		if (sxe1->document->ptr == sxe2->document->ptr) {
+			return 0;
+		}
+		return ZEND_UNCOMPARABLE;
+	}
+
+	/* Only one of the nodes set: Cannot compare. */
+	return ZEND_UNCOMPARABLE;
 }
 /* }}} */
 
@@ -2282,15 +2290,15 @@ SXE_METHOD(__construct)
 	}
 
 	if (ZEND_SIZE_T_INT_OVFL(data_len)) {
-		zend_throw_exception(zend_ce_exception, "Data is too long", 0);
+		zend_argument_error(zend_ce_exception, 1, "is too long");
 		RETURN_THROWS();
 	}
 	if (ZEND_SIZE_T_INT_OVFL(ns_len)) {
-		zend_throw_exception(zend_ce_exception, "Namespace is too long", 0);
+		zend_argument_error(zend_ce_exception, 4, "is too long");
 		RETURN_THROWS();
 	}
 	if (ZEND_LONG_EXCEEDS_INT(options)) {
-		zend_throw_exception(zend_ce_exception, "Invalid options", 0);
+		zend_argument_error(zend_ce_exception, 2, "is invalid");
 		RETURN_THROWS();
 	}
 

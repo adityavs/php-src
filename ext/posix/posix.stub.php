@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 function posix_kill(int $pid, int $sig): bool {}
 
 function posix_getpid(): int {}
@@ -93,6 +95,7 @@ function posix_setrlimit(int $resource, int $softlimit, int $hardlimit): bool {}
 
 function posix_get_last_error(): int {}
 
+/** @alias posix_get_last_error */
 function posix_errno(): int {}
 
 function posix_strerror(int $errno): string {}

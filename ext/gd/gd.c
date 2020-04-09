@@ -238,160 +238,10 @@ static void php_gd_object_minit_helper()
  *
  ********************************************************/
 
-/* {{{ gd_functions[]
- */
-static const zend_function_entry gd_functions[] = {
-	PHP_FE(gd_info,                                 arginfo_gd_info)
-	PHP_FE(imagearc,								arginfo_imagearc)
-	PHP_FE(imageellipse,							arginfo_imageellipse)
-	PHP_FE(imagechar,								arginfo_imagechar)
-	PHP_FE(imagecharup,								arginfo_imagecharup)
-	PHP_FE(imagecolorat,							arginfo_imagecolorat)
-	PHP_FE(imagecolorallocate,						arginfo_imagecolorallocate)
-	PHP_FE(imagepalettecopy,						arginfo_imagepalettecopy)
-	PHP_FE(imagecreatefromstring,					arginfo_imagecreatefromstring)
-	PHP_FE(imagecolorclosest,						arginfo_imagecolorclosest)
-	PHP_FE(imagecolorclosesthwb,					arginfo_imagecolorclosesthwb)
-	PHP_FE(imagecolordeallocate,					arginfo_imagecolordeallocate)
-	PHP_FE(imagecolorresolve,						arginfo_imagecolorresolve)
-	PHP_FE(imagecolorexact,							arginfo_imagecolorexact)
-	PHP_FE(imagecolorset,							arginfo_imagecolorset)
-	PHP_FE(imagecolortransparent,					arginfo_imagecolortransparent)
-	PHP_FE(imagecolorstotal,						arginfo_imagecolorstotal)
-	PHP_FE(imagecolorsforindex,						arginfo_imagecolorsforindex)
-	PHP_FE(imagecopy,								arginfo_imagecopy)
-	PHP_FE(imagecopymerge,							arginfo_imagecopymerge)
-	PHP_FE(imagecopymergegray,						arginfo_imagecopymergegray)
-	PHP_FE(imagecopyresized,						arginfo_imagecopyresized)
-	PHP_FE(imagecreate,								arginfo_imagecreate)
-	PHP_FE(imagecreatetruecolor,					arginfo_imagecreatetruecolor)
-	PHP_FE(imageistruecolor,						arginfo_imageistruecolor)
-	PHP_FE(imagetruecolortopalette,					arginfo_imagetruecolortopalette)
-	PHP_FE(imagepalettetotruecolor,					arginfo_imagepalettetotruecolor)
-	PHP_FE(imagesetthickness,						arginfo_imagesetthickness)
-	PHP_FE(imagefilledarc,							arginfo_imagefilledarc)
-	PHP_FE(imagefilledellipse,						arginfo_imagefilledellipse)
-	PHP_FE(imagealphablending,						arginfo_imagealphablending)
-	PHP_FE(imagesavealpha,							arginfo_imagesavealpha)
-	PHP_FE(imagecolorallocatealpha,					arginfo_imagecolorallocatealpha)
-	PHP_FE(imagecolorresolvealpha, 					arginfo_imagecolorresolvealpha)
-	PHP_FE(imagecolorclosestalpha,					arginfo_imagecolorclosestalpha)
-	PHP_FE(imagecolorexactalpha,					arginfo_imagecolorexactalpha)
-	PHP_FE(imagecopyresampled,						arginfo_imagecopyresampled)
-
-#ifdef PHP_WIN32
-	PHP_FE(imagegrabwindow,							arginfo_imagegrabwindow)
-	PHP_FE(imagegrabscreen,							arginfo_imagegrabscreen)
-#endif
-
-	PHP_FE(imagerotate,								arginfo_imagerotate)
-	PHP_FE(imageflip,								arginfo_imageflip)
-
-	PHP_FE(imageantialias,							arginfo_imageantialias)
-	PHP_FE(imagecrop,								arginfo_imagecrop)
-	PHP_FE(imagecropauto,							arginfo_imagecropauto)
-	PHP_FE(imagescale,								arginfo_imagescale)
-	PHP_FE(imageaffine,								arginfo_imageaffine)
-	PHP_FE(imageaffinematrixconcat,					arginfo_imageaffinematrixconcat)
-	PHP_FE(imageaffinematrixget,					arginfo_imageaffinematrixget)
-	PHP_FE(imagegetinterpolation,					arginfo_imagegetinterpolation)
-	PHP_FE(imagesetinterpolation,					arginfo_imagesetinterpolation)
-	PHP_FE(imagesettile,							arginfo_imagesettile)
-	PHP_FE(imagesetbrush,							arginfo_imagesetbrush)
-	PHP_FE(imagesetstyle,							arginfo_imagesetstyle)
-
-#ifdef HAVE_GD_PNG
-	PHP_FE(imagecreatefrompng,						arginfo_imagecreatefrompng)
-#endif
-#ifdef HAVE_GD_WEBP
-	PHP_FE(imagecreatefromwebp,						arginfo_imagecreatefromwebp)
-#endif
-	PHP_FE(imagecreatefromgif,						arginfo_imagecreatefromgif)
-#ifdef HAVE_GD_JPG
-	PHP_FE(imagecreatefromjpeg,						arginfo_imagecreatefromjpeg)
-#endif
-	PHP_FE(imagecreatefromwbmp,						arginfo_imagecreatefromwbmp)
-	PHP_FE(imagecreatefromxbm,						arginfo_imagecreatefromxbm)
-#if defined(HAVE_GD_XPM)
-	PHP_FE(imagecreatefromxpm,						arginfo_imagecreatefromxpm)
-#endif
-	PHP_FE(imagecreatefromgd,						arginfo_imagecreatefromgd)
-	PHP_FE(imagecreatefromgd2,						arginfo_imagecreatefromgd2)
-	PHP_FE(imagecreatefromgd2part,					arginfo_imagecreatefromgd2part)
-#ifdef HAVE_GD_BMP
-	PHP_FE(imagecreatefrombmp,						arginfo_imagecreatefrombmp)
-#endif
-#ifdef HAVE_GD_TGA
-	PHP_FE(imagecreatefromtga,						arginfo_imagecreatefromtga)
-#endif
-#ifdef HAVE_GD_PNG
-	PHP_FE(imagepng,								arginfo_imagepng)
-#endif
-#ifdef HAVE_GD_WEBP
-	PHP_FE(imagewebp,								arginfo_imagewebp)
-#endif
-	PHP_FE(imagegif,								arginfo_imagegif)
-#ifdef HAVE_GD_JPG
-	PHP_FE(imagejpeg,								arginfo_imagejpeg)
-#endif
-	PHP_FE(imagewbmp,								arginfo_imagewbmp)
-	PHP_FE(imagegd,									arginfo_imagegd)
-	PHP_FE(imagegd2,								arginfo_imagegd2)
-#ifdef HAVE_GD_BMP
-	PHP_FE(imagebmp,								arginfo_imagebmp)
-#endif
-
-	PHP_FE(imagedestroy,							arginfo_imagedestroy)
-	PHP_FE(imagegammacorrect,						arginfo_imagegammacorrect)
-	PHP_FE(imagefill,								arginfo_imagefill)
-	PHP_FE(imagefilledpolygon,						arginfo_imagefilledpolygon)
-	PHP_FE(imagefilledrectangle,					arginfo_imagefilledrectangle)
-	PHP_FE(imagefilltoborder,						arginfo_imagefilltoborder)
-	PHP_FE(imagefontwidth,							arginfo_imagefontwidth)
-	PHP_FE(imagefontheight,							arginfo_imagefontheight)
-	PHP_FE(imageinterlace,							arginfo_imageinterlace)
-	PHP_FE(imageline,								arginfo_imageline)
-	PHP_FE(imageloadfont,							arginfo_imageloadfont)
-	PHP_FE(imagepolygon,							arginfo_imagepolygon)
-	PHP_FE(imageopenpolygon,						arginfo_imageopenpolygon)
-	PHP_FE(imagerectangle,							arginfo_imagerectangle)
-	PHP_FE(imagesetpixel,							arginfo_imagesetpixel)
-	PHP_FE(imagestring,								arginfo_imagestring)
-	PHP_FE(imagestringup,							arginfo_imagestringup)
-	PHP_FE(imagesx,									arginfo_imagesx)
-	PHP_FE(imagesy,									arginfo_imagesy)
-	PHP_FE(imagesetclip,							arginfo_imagesetclip)
-	PHP_FE(imagegetclip,							arginfo_imagegetclip)
-	PHP_FE(imagedashedline,							arginfo_imagedashedline)
-
-#ifdef HAVE_GD_FREETYPE
-	PHP_FE(imagettfbbox,							arginfo_imagettfbbox)
-	PHP_FE(imagettftext,							arginfo_imagettftext)
-	PHP_FE(imageftbbox,								arginfo_imageftbbox)
-	PHP_FE(imagefttext,								arginfo_imagefttext)
-#endif
-
-	PHP_FE(imagetypes,								arginfo_imagetypes)
-
-	PHP_FE(imagelayereffect,						arginfo_imagelayereffect)
-	PHP_FE(imagexbm,								arginfo_imagexbm)
-
-	PHP_FE(imagecolormatch,							arginfo_imagecolormatch)
-
-/* gd filters */
-	PHP_FE(imagefilter,		 						arginfo_imagefilter)
-	PHP_FE(imageconvolution,						arginfo_imageconvolution)
-
-	PHP_FE(imageresolution,							arginfo_imageresolution)
-
-	PHP_FE_END
-};
-/* }}} */
-
 zend_module_entry gd_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"gd",
-	gd_functions,
+	ext_functions,
 	PHP_MINIT(gd),
 	PHP_MSHUTDOWN(gd),
 	NULL,
@@ -886,7 +736,7 @@ PHP_FUNCTION(imagesetstyle)
 
 	num_styles = zend_hash_num_elements(Z_ARRVAL_P(styles));
 	if (num_styles == 0) {
-		zend_value_error("Styles array must not be empty");
+		zend_argument_value_error(2, "cannot be empty");
 		RETURN_THROWS();
 	}
 
@@ -917,12 +767,12 @@ PHP_FUNCTION(imagecreatetruecolor)
 	}
 
 	if (x_size <= 0 || x_size >= INT_MAX) {
-		zend_value_error("Invalid width (x_size)");
+		zend_argument_value_error(1, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
 	if (y_size <= 0 || y_size >= INT_MAX) {
-		zend_value_error("Invalid height (y_size)");
+		zend_argument_value_error(2, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
@@ -969,7 +819,7 @@ PHP_FUNCTION(imagetruecolortopalette)
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
 	if (ncolors <= 0 || ZEND_LONG_INT_OVFL(ncolors)) {
-		zend_value_error("Number of colors has to be greater than zero and no more than %d", INT_MAX);
+		zend_argument_value_error(3, "must be greater than 0 and less than %d", INT_MAX);
 		RETURN_THROWS();
 	}
 
@@ -1172,9 +1022,9 @@ PHP_FUNCTION(imagelayereffect)
 }
 /* }}} */
 
-#define CHECK_RGBA_RANGE(component, name) \
+#define CHECK_RGBA_RANGE(component, name, argument_number) \
 	if (component < 0 || component > gd##name##Max) { \
-		zend_value_error(#name " component is out of range, must be between 0 and %d (inclusive)", gd##name##Max); \
+		zend_argument_value_error(argument_number, "must be between 0 and %d (inclusive)", gd##name##Max); \
 		RETURN_THROWS(); \
 	}
 
@@ -1193,10 +1043,10 @@ PHP_FUNCTION(imagecolorallocatealpha)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
-	CHECK_RGBA_RANGE(alpha, Alpha);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
+	CHECK_RGBA_RANGE(alpha, Alpha, 5);
 
 	ct = gdImageColorAllocateAlpha(im, red, green, blue, alpha);
 	if (ct < 0) {
@@ -1220,10 +1070,10 @@ PHP_FUNCTION(imagecolorresolvealpha)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
-	CHECK_RGBA_RANGE(alpha, Alpha);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
+	CHECK_RGBA_RANGE(alpha, Alpha, 5);
 
 	RETURN_LONG(gdImageColorResolveAlpha(im, red, green, blue, alpha));
 }
@@ -1243,10 +1093,10 @@ PHP_FUNCTION(imagecolorclosestalpha)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
-	CHECK_RGBA_RANGE(alpha, Alpha);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
+	CHECK_RGBA_RANGE(alpha, Alpha, 5);
 
 	RETURN_LONG(gdImageColorClosestAlpha(im, red, green, blue, alpha));
 }
@@ -1260,16 +1110,16 @@ PHP_FUNCTION(imagecolorexactalpha)
 	zend_long red, green, blue, alpha;
 	gdImagePtr im;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Ollll", &IM, gd_image_ce,  &red, &green, &blue, &alpha) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Ollll", &IM, gd_image_ce, &red, &green, &blue, &alpha) == FAILURE) {
 		RETURN_THROWS();
 	}
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
-	CHECK_RGBA_RANGE(alpha, Alpha);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
+	CHECK_RGBA_RANGE(alpha, Alpha, 5);
 
 	RETURN_LONG(gdImageColorExactAlpha(im, red, green, blue, alpha));
 }
@@ -1512,12 +1362,12 @@ PHP_FUNCTION(imagecreate)
 	}
 
 	if (x_size <= 0 || x_size >= INT_MAX) {
-		zend_value_error("Invalid width (x_size)");
+		zend_argument_value_error(1, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
 	if (y_size <= 0 || y_size >= INT_MAX) {
-		zend_value_error("Invalid height (y_size)");
+		zend_argument_value_error(2, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
@@ -1751,12 +1601,12 @@ static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type,
 		}
 
 		if (width < 1) {
-			zend_value_error("Width must be at least 1");
+			zend_argument_value_error(4, "must be greater than or equal to 1");
 			RETURN_THROWS();
 		}
 
 		if (height < 1) {
-			zend_value_error("Height must be at least 1");
+			zend_argument_value_error(5, "must be greater than or equal to 1");
 			RETURN_THROWS();
 		}
 
@@ -2173,9 +2023,9 @@ PHP_FUNCTION(imagecolorallocate)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	ct = gdImageColorAllocate(im, red, green, blue);
 	if (ct < 0) {
@@ -2251,9 +2101,9 @@ PHP_FUNCTION(imagecolorclosest)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	RETURN_LONG(gdImageColorClosest(im, red, green, blue));
 }
@@ -2273,9 +2123,9 @@ PHP_FUNCTION(imagecolorclosesthwb)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	RETURN_LONG(gdImageColorClosestHWB(im, red, green, blue));
 }
@@ -2307,7 +2157,7 @@ PHP_FUNCTION(imagecolordeallocate)
 		gdImageColorDeallocate(im, col);
 		RETURN_TRUE;
 	} else {
-		zend_value_error("Color index %d out of range", col);
+		zend_argument_value_error(2, "must be between 0 and %d", gdImageColorsTotal(im));
 		RETURN_THROWS();
 	}
 }
@@ -2327,9 +2177,9 @@ PHP_FUNCTION(imagecolorresolve)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	RETURN_LONG(gdImageColorResolve(im, red, green, blue));
 }
@@ -2349,9 +2199,9 @@ PHP_FUNCTION(imagecolorexact)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	RETURN_LONG(gdImageColorExact(im, red, green, blue));
 }
@@ -2372,10 +2222,9 @@ PHP_FUNCTION(imagecolorset)
 
 	im = php_gd_libgdimageptr_from_zval_p(IM);
 
-	CHECK_RGBA_RANGE(red, Red);
-	CHECK_RGBA_RANGE(green, Green);
-	CHECK_RGBA_RANGE(blue, Blue);
-	CHECK_RGBA_RANGE(alpha, Alpha);
+	CHECK_RGBA_RANGE(red, Red, 2);
+	CHECK_RGBA_RANGE(green, Green, 3);
+	CHECK_RGBA_RANGE(blue, Blue, 4);
 
 	col = color;
 
@@ -2434,8 +2283,13 @@ PHP_FUNCTION(imagegammacorrect)
 		RETURN_THROWS();
 	}
 
-	if ( input <= 0.0 || output <= 0.0 ) {
-		zend_value_error("Gamma values must be positive");
+	if (input <= 0.0) {
+		zend_argument_value_error(2, "must be greater than 0");
+		RETURN_THROWS();
+	}
+
+	if (output <= 0.0) {
+		zend_argument_value_error(3, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
@@ -2744,7 +2598,7 @@ static void php_imagepolygon(INTERNAL_FUNCTION_PARAMETERS, int filled)
 		COL = NPOINTS;
 		NPOINTS = zend_hash_num_elements(Z_ARRVAL_P(POINTS));
 		if (NPOINTS % 2 != 0) {
-			zend_value_error("Points array must have an even number of elements");
+			zend_argument_value_error(2, "must have an even number of elements");
 			RETURN_THROWS();
 		}
 		NPOINTS /= 2;
@@ -2757,7 +2611,7 @@ static void php_imagepolygon(INTERNAL_FUNCTION_PARAMETERS, int filled)
 
 	nelem = zend_hash_num_elements(Z_ARRVAL_P(POINTS));
 	if (npoints < 3) {
-		zend_value_error("Polygon must have at least 3 points");
+		zend_argument_value_error(3, "must be greater than or equal to 3");
 		RETURN_THROWS();
 	}
 
@@ -3133,8 +2987,23 @@ PHP_FUNCTION(imagecopyresized)
 	dstH = DH;
 	dstW = DW;
 
-	if (dstW <= 0 || dstH <= 0 || srcW <= 0 || srcH <= 0) {
-		zend_value_error("Invalid image dimensions");
+	if (dstW <= 0) {
+		zend_argument_value_error(3, "must be greater than 0");
+		RETURN_THROWS();
+	}
+
+	if (dstH <= 0) {
+		zend_argument_value_error(4, "must be greater than 0");
+		RETURN_THROWS();
+	}
+
+	if (srcW <= 0) {
+		zend_argument_value_error(5, "must be greater than 0");
+		RETURN_THROWS();
+	}
+
+	if (srcH <= 0) {
+		zend_argument_value_error(6, "must be greater than 0");
 		RETURN_THROWS();
 	}
 
@@ -3616,14 +3485,14 @@ PHP_FUNCTION(imageconvolution)
 
 	nelem = zend_hash_num_elements(Z_ARRVAL_P(hash_matrix));
 	if (nelem != 3) {
-		zend_value_error("Convolution matrix must be a 3x3 array");
+		zend_argument_value_error(2, "must be a 3x3 array");
 		RETURN_THROWS();
 	}
 
 	for (i=0; i<3; i++) {
 		if ((var = zend_hash_index_find(Z_ARRVAL_P(hash_matrix), (i))) != NULL && Z_TYPE_P(var) == IS_ARRAY) {
 			if (zend_hash_num_elements(Z_ARRVAL_P(var)) != 3 ) {
-				zend_value_error("Convolution matrix must be a 3x3 array, matrix[%d] only has %d elements", i, zend_hash_num_elements(Z_ARRVAL_P(var)));
+				zend_argument_value_error(2, "must be a 3x3 array, matrix[%d] only has %d elements", i, zend_hash_num_elements(Z_ARRVAL_P(var)));
 				RETURN_THROWS();
 			}
 
@@ -3631,7 +3500,7 @@ PHP_FUNCTION(imageconvolution)
 				if ((var2 = zend_hash_index_find(Z_ARRVAL_P(var), j)) != NULL) {
 					matrix[i][j] = (float) zval_get_double(var2);
 				} else {
-					zend_value_error("Convolution matrix must be a 3x3 array, matrix[%d][%d] cannot be found (missing integer key)", i, j);
+					zend_argument_value_error(2, "must be a 3x3 array, matrix[%d][%d] cannot be found (missing integer key)", i, j);
 					RETURN_THROWS();
 				}
 			}
@@ -3676,7 +3545,7 @@ PHP_FUNCTION(imageflip)
 			break;
 
 		default:
-			zend_value_error("Unknown flip mode");
+			zend_argument_value_error(2, "must be a valid mode");
 			RETURN_THROWS();
 	}
 
@@ -3725,28 +3594,28 @@ PHP_FUNCTION(imagecrop)
 	if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "x", sizeof("x") -1)) != NULL) {
 		rect.x = zval_get_long(tmp);
 	} else {
-		zend_value_error("Cropping rectangle is missing x position");
+		zend_argument_value_error(2, "must have an 'x' key");
 		RETURN_THROWS();
 	}
 
 	if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "y", sizeof("y") - 1)) != NULL) {
 		rect.y = zval_get_long(tmp);
 	} else {
-		zend_value_error("Cropping rectangle is missing y position");
+		zend_argument_value_error(2, "must have a 'y' key");
 		RETURN_THROWS();
 	}
 
 	if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "width", sizeof("width") - 1)) != NULL) {
 		rect.width = zval_get_long(tmp);
 	} else {
-		zend_value_error("Cropping rectangle is missing width");
+		zend_argument_value_error(2, "must have a 'width' key");
 		RETURN_THROWS();
 	}
 
 	if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "height", sizeof("height") - 1)) != NULL) {
 		rect.height = zval_get_long(tmp);
 	} else {
-		zend_value_error("Cropping rectangle is missing height");
+		zend_argument_value_error(2, "must have a 'height' key");
 		RETURN_THROWS();
 	}
 
@@ -3788,14 +3657,14 @@ PHP_FUNCTION(imagecropauto)
 
 		case GD_CROP_THRESHOLD:
 			if (color < 0 || (!gdImageTrueColor(im) && color >= gdImageColorsTotal(im))) {
-				zend_value_error("Color argument missing with threshold mode");
+				zend_argument_value_error(4, "must be greater than or equal to 0 when using the threshold mode");
 				RETURN_THROWS();
 			}
 			im_crop = gdImageCropThreshold(im, color, (float) threshold);
 			break;
 
 		default:
-			zend_value_error("Unknown crop mode");
+			zend_argument_value_error(2, "must be a valid mode");
 			RETURN_THROWS();
 	}
 
@@ -3885,7 +3754,7 @@ PHP_FUNCTION(imageaffine)
 	src = php_gd_libgdimageptr_from_zval_p(IM);
 
 	if ((nelems = zend_hash_num_elements(Z_ARRVAL_P(z_affine))) != 6) {
-		zend_value_error("Affine array must have six elements");
+		zend_argument_value_error(2, "must have 6 elements");
 		RETURN_THROWS();
 	}
 
@@ -3902,7 +3771,7 @@ PHP_FUNCTION(imageaffine)
 					affine[i] = zval_get_double(zval_affine_elem);
 					break;
 				default:
-					zend_type_error("Invalid type for element %i", i);
+					zend_argument_type_error(3, "contains invalid type for element %i", i);
 					RETURN_THROWS();
 			}
 		}
@@ -3912,28 +3781,28 @@ PHP_FUNCTION(imageaffine)
 		if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "x", sizeof("x") - 1)) != NULL) {
 			rect.x = zval_get_long(tmp);
 		} else {
-			zend_value_error("Clip array is missing x position");
+			zend_argument_value_error(3, "must have an 'x' key");
 			RETURN_THROWS();
 		}
 
 		if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "y", sizeof("y") - 1)) != NULL) {
 			rect.y = zval_get_long(tmp);
 		} else {
-			zend_value_error("Clip array is missing y position");
+			zend_argument_value_error(3, "must have a 'y' key");
 			RETURN_THROWS();
 		}
 
 		if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "width", sizeof("width") - 1)) != NULL) {
 			rect.width = zval_get_long(tmp);
 		} else {
-			zend_value_error("Clip array is missing width");
+			zend_argument_value_error(3, "must have a 'width' key");
 			RETURN_THROWS();
 		}
 
 		if ((tmp = zend_hash_str_find(Z_ARRVAL_P(z_rect), "height", sizeof("height") - 1)) != NULL) {
 			rect.height = zval_get_long(tmp);
 		} else {
-			zend_value_error("Clip array is missing height");
+			zend_argument_value_error(3, "must have a 'height' key");
 			RETURN_THROWS();
 		}
 		pRect = &rect;
@@ -3970,21 +3839,21 @@ PHP_FUNCTION(imageaffinematrixget)
 		case GD_AFFINE_SCALE: {
 			double x, y;
 			if (!options || Z_TYPE_P(options) != IS_ARRAY) {
-				zend_type_error("Array expected as options when using translate or scale");
+				zend_argument_type_error(1, "must be of type array when using translate or scale");
 				RETURN_THROWS();
 			}
 
 			if ((tmp = zend_hash_str_find(Z_ARRVAL_P(options), "x", sizeof("x") - 1)) != NULL) {
 				x = zval_get_double(tmp);
 			} else {
-				zend_value_error("Options array is missing x position");
+				zend_argument_value_error(2, "must have an 'x' key");
 				RETURN_THROWS();
 			}
 
 			if ((tmp = zend_hash_str_find(Z_ARRVAL_P(options), "y", sizeof("y") - 1)) != NULL) {
 				y = zval_get_double(tmp);
 			} else {
-				zend_value_error("Options array is missing y position");
+				zend_argument_value_error(2, "must have a 'y' key");
 				RETURN_THROWS();
 			}
 
@@ -4002,7 +3871,7 @@ PHP_FUNCTION(imageaffinematrixget)
 			double angle;
 
 			if (!options) {
-				zend_type_error("Number is expected as option when using rotate or shear");
+				zend_argument_type_error(2, "must be of type int|double when using rotate or shear");
 				RETURN_THROWS();
 			}
 
@@ -4019,7 +3888,7 @@ PHP_FUNCTION(imageaffinematrixget)
 		}
 
 		default:
-			zend_value_error("Invalid type for element " ZEND_LONG_FMT, type);
+			zend_argument_value_error(1, "must be a valid element type");
 			RETURN_THROWS();
 	}
 
@@ -4044,14 +3913,19 @@ PHP_FUNCTION(imageaffinematrixconcat)
 	zval *tmp;
 	zval *z_m1;
 	zval *z_m2;
-	int i, nelems;
+	int i;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "aa", &z_m1, &z_m2) == FAILURE)  {
 		RETURN_THROWS();
 	}
 
-	if (((nelems = zend_hash_num_elements(Z_ARRVAL_P(z_m1))) != 6) || (nelems = zend_hash_num_elements(Z_ARRVAL_P(z_m2))) != 6) {
-		zend_value_error("Affine arrays must have six elements");
+	if (zend_hash_num_elements(Z_ARRVAL_P(z_m1)) != 6) {
+		zend_argument_value_error(1, "must have 6 elements");
+		RETURN_THROWS();
+	}
+
+	if (zend_hash_num_elements(Z_ARRVAL_P(z_m2)) != 6) {
+		zend_argument_value_error(1, "must have 6 elements");
 		RETURN_THROWS();
 	}
 
@@ -4068,7 +3942,7 @@ PHP_FUNCTION(imageaffinematrixconcat)
 					m1[i] = zval_get_double(tmp);
 					break;
 				default:
-					zend_type_error("Matrix 1 contains invalid type for element %i", i);
+					zend_argument_type_error(1, "contains invalid type for element %i", i);
 					RETURN_THROWS();
 			}
 		}
@@ -4085,7 +3959,7 @@ PHP_FUNCTION(imageaffinematrixconcat)
 					m2[i] = zval_get_double(tmp);
 					break;
 				default:
-					zend_type_error("Matrix 2 contains invalid type for element %i", i);
+					zend_argument_type_error(2, "contains invalid type for element %i", i);
 					RETURN_THROWS();
 			}
 		}
@@ -4299,7 +4173,7 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, 
 			close_stream = 0;
 		} else if (Z_TYPE_P(to_zval) == IS_STRING) {
 			if (CHECK_ZVAL_NULL_PATH(to_zval)) {
-				zend_type_error("Invalid 2nd parameter, filename must not contain null bytes");
+				zend_argument_type_error(2, "must not contain null bytes");
 				RETURN_THROWS();
 			}
 

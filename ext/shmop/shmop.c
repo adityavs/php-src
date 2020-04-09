@@ -46,25 +46,12 @@ php_shmop_globals shmop_globals;
 
 int shm_type;
 
-/* {{{ shmop_functions[]
- */
-static const zend_function_entry shmop_functions[] = {
-	PHP_FE(shmop_open, 		arginfo_shmop_open)
-	PHP_FE(shmop_read, 		arginfo_shmop_read)
-	PHP_FE(shmop_close, 	arginfo_shmop_close)
-	PHP_FE(shmop_size, 		arginfo_shmop_size)
-	PHP_FE(shmop_write, 	arginfo_shmop_write)
-	PHP_FE(shmop_delete, 	arginfo_shmop_delete)
-	PHP_FE_END
-};
-/* }}} */
-
 /* {{{ shmop_module_entry
  */
 zend_module_entry shmop_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"shmop",
-	shmop_functions,
+	ext_functions,
 	PHP_MINIT(shmop),
 	NULL,
 	NULL,
@@ -173,6 +160,11 @@ PHP_FUNCTION(shmop_open)
 	if (shmctl(shmop->shmid, IPC_STAT, &shm)) {
 		/* please do not add coverage here: the segment would be leaked and impossible to delete via php */
 		php_error_docref(NULL, E_WARNING, "Unable to get shared memory segment information '%s'", strerror(errno));
+		goto err;
+	}
+
+	if (shm.shm_segsz > ZEND_LONG_MAX) {
+		php_error_docref(NULL, E_WARNING, "shared memory segment too large to attach");
 		goto err;
 	}
 

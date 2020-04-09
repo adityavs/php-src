@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 /* main/main.c */
 
 function set_time_limit(int $seconds): bool {}
@@ -47,6 +49,7 @@ function output_add_rewrite_var(string $name, string $value): bool {}
 
 function stream_wrapper_register(string $protocol, string $classname, int $flags = 0): bool {}
 
+/** @alias stream_wrapper_register */
 function stream_register_wrapper(string $protocol, string $classname, int $flags = 0): bool {}
 
 function stream_wrapper_unregister(string $protocol): bool {}
@@ -64,7 +67,10 @@ function ksort(array &$arg, int $sort_flags = SORT_REGULAR): bool {}
 /** @param mixed $var */
 function count($var, int $mode = COUNT_NORMAL): int {}
 
-/** @param mixed $var */
+/**
+ * @param mixed $var
+ * @alias count
+ */
 function sizeof($var, int $mode = COUNT_NORMAL): int {}
 
 function natsort(array &$arg): bool {}
@@ -100,7 +106,10 @@ function reset(array|object &$arg) {}
 /** @return mixed */
 function current(array|object $arg) {}
 
-/** @return mixed */
+/**
+ * @return mixed
+ * @alias current
+ */
 function pos(array|object $arg) {}
 
 function key(array|object $arg): int|string|null {}
@@ -111,9 +120,9 @@ function min($arg, ...$args) {}
 /** @return mixed */
 function max($arg, ...$args) {}
 
-function array_walk(array|object &$input, callable $funcname, $userdata = null): bool {}
+function array_walk(array|object &$input, callable $funcname, $userdata = UNKNOWN): bool {}
 
-function array_walk_recursive(array|object &$input, callable $funcname, $userdata = null): bool {}
+function array_walk_recursive(array|object &$input, callable $funcname, $userdata = UNKNOWN): bool {}
 
 function in_array($needle, array $haystack, bool $strict = false): bool {}
 
@@ -229,6 +238,7 @@ function array_sum(array $arg): int|float {}
 
 function array_product(array $arg): int|float {}
 
+/** @return mixed */
 function array_reduce(array $arg, callable $callback, $initial = null) {}
 
 function array_filter(array $arg, callable $callback = UNKNOWN, int $use_keys = 0): array {}
@@ -238,7 +248,10 @@ function array_map(?callable $callback, array $arr1, array ...$arrays): array {}
 /** @param mixed $key */
 function array_key_exists($key, array $search): bool {}
 
-/** @param mixed $key */
+/**
+ * @param mixed $key
+ * @alias array_key_exists
+ */
 function key_exists($key, array $search): bool {}
 
 function array_chunk(array $arg, int $size, bool $preserve_keys = false): array {}
@@ -316,6 +329,7 @@ function register_shutdown_function($function, ...$args): ?bool {}
 
 function highlight_file(string $filename, bool $return = false): string|bool|null {}
 
+/** @alias highlight_file */
 function show_source(string $filename, bool $return = false): string|bool|null {}
 
 function php_strip_whitespace(string $filename): string {}
@@ -328,6 +342,7 @@ function ini_get_all(?string $extension = null, bool $details = true): array|fal
 
 function ini_set(string $varname, string $value): string|false {}
 
+/** @alias ini_set */
 function ini_alter(string $varname, string $value): string|false {}
 
 function ini_restore(string $varname): void {}
@@ -415,12 +430,14 @@ function gethostbynamel(string $hostname): array|false {}
 #if defined(PHP_WIN32) || HAVE_DNS_SEARCH_FUNC
 function dns_check_record(string $hostname, string $type = "MX"): bool {}
 
+/** @alias dns_check_record */
 function checkdnsrr(string $hostname, string $type = "MX"): bool {}
 
 function dns_get_record(string $hostname, int $type = DNS_ANY, &$authns = null, &$addtl = null, bool $raw = false): array|false {}
 
 function dns_get_mx(string $hostname, &$mxhosts, &$weight = null): bool {}
 
+/** @alias dns_get_mx */
 function getmxrr(string $hostname, &$mxhosts, &$weight = null): bool {}
 #endif
 
@@ -546,6 +563,7 @@ function trim(string $str, string $character_mask = " \n\r\t\v\0"): string {}
 
 function rtrim(string $str, string $character_mask = " \n\r\t\v\0"): string {}
 
+/** @alias rtrim */
 function chop(string $str, string $character_mask = " \n\r\t\v\0"): string {}
 
 function ltrim(string $str, string $character_mask = " \n\r\t\v\0"): string {}
@@ -556,6 +574,7 @@ function explode(string $separator, string $str, int $limit = PHP_INT_MAX): arra
 
 function implode(string|array $glue, array $pieces = UNKNOWN): string {}
 
+/** @alias implode */
 function join(string|array $glue, array $pieces = UNKNOWN): string {}
 
 function strtok(string $str, string $token = UNKNOWN): string|false {}
@@ -574,6 +593,7 @@ function stristr(string $haystack, string $needle, bool $before_needle = false):
 
 function strstr(string $haystack, string $needle, bool $before_needle = false): string|false {}
 
+/** @alias strstr */
 function strchr(string $haystack, string $needle, bool $before_needle = false): string|false {}
 
 function strpos(string $haystack, string $needle, int $offset = 0): int|false {}
@@ -585,6 +605,8 @@ function strrpos(string $haystack, string $needle, int $offset = 0): int|false {
 function strripos(string $haystack, string $needle, int $offset = 0): int|false {}
 
 function strrchr(string $haystack, string $needle): string|false {}
+
+function str_contains(string $haystack, string $needle): bool {}
 
 function chunk_split(string $str, int $chunklen = 76, string $ending = "\r\n"): string {}
 
@@ -689,29 +711,6 @@ function utf8_encode(string $data): string {}
 
 function utf8_decode(string $data): string {}
 
-/* dir.c */
-
-class Directory
-{
-    /**
-     * @param resource $dir_handle
-     * @return void
-     */
-    public function close($dir_handle = UNKNOWN) {}
-
-    /**
-     * @param resource $dir_handle
-     * @return void
-     */
-    public function rewind($dir_handle = UNKNOWN) {}
-
-    /**
-     * @param resource $dir_handle
-     * @return string|false
-     */
-    public function read($dir_handle = UNKNOWN) {}
-}
-
 /**
  * @param resource $context
  * @return resource|false
@@ -721,7 +720,10 @@ function opendir(string $path, $context = UNKNOWN) {}
 /** @param resource $context */
 function getdir(string $path, $context = UNKNOWN): Directory|false {}
 
-/** @param resource $context */
+/**
+ * @param resource $context
+ * @alias getdir
+ */
 function dir(string $path, $context = UNKNOWN): Directory|false {}
 
 /** @param resource $dir_handle */
@@ -799,7 +801,7 @@ function feof($handle): bool {}
 function fgetc($handle): string|false {}
 
 /** @param resource $handle */
-function fgets($handle, int $length = 1024): string|false {}
+function fgets($handle, int $length = UNKNOWN): string|false {}
 
 /** @param resource $handle */
 function fread($handle, int $length): string|false {}
@@ -837,7 +839,10 @@ function fflush($handle): bool {}
 /** @param resource $handle */
 function fwrite($handle, string $content, int $max_length = UNKNOWN): int|false {}
 
-/** @param resource $handle */
+/**
+ * @param resource $handle
+ * @alias fwrite
+ */
 function fputs($handle, string $content, int $max_length = UNKNOWN): int|false {}
 
 /** @param resource|null $context */
@@ -875,9 +880,7 @@ function fputcsv($handle, array $fields, string $delimiter = ",", string $enclos
 /** @param resource $handle */
 function fgetcsv($handle, $length = UNKNOWN, string $delimiter = ",", string $enclosure = '"', string $escape = "\\"): array|false {}
 
-#if HAVE_REALPATH || defined(ZTS)
 function realpath(string $path): string|false {}
-#endif
 
 #ifdef HAVE_FNMATCH
 function fnmatch(string $pattern, string $filename, int $flags = 0): bool {}
@@ -909,6 +912,7 @@ function file_exists(string $filename): bool {}
 
 function is_writable(string $filename): bool {}
 
+/** @alias is_writable */
 function is_writeable(string $filename): bool {}
 
 function is_readable(string $filename): bool {}
@@ -938,7 +942,7 @@ function lchgrp(string $filename, $group): bool {}
 function chmod(string $filename, int $mode): bool {}
 
 #if HAVE_UTIME
-function touch(string $filename, int $time = 0, int $atime = 0): bool {}
+function touch(string $filename, int $time = UNKNOWN, int $atime = UNKNOWN): bool {}
 #endif
 
 function clearstatcache(bool $clear_realpath_cache = false, string $filename = ""): void {}
@@ -947,6 +951,7 @@ function disk_total_space(string $directory): float|false {}
 
 function disk_free_space(string $directory): float|false {}
 
+/** @alias disk_free_space */
 function diskfreespace(string $directory): float|false {}
 
 function realpath_cache_get(): array {}
@@ -1170,7 +1175,7 @@ function proc_open($cmd, array $descriptorspec, &$pipes, ?string $cwd = null, ?a
 function proc_close($process): int {}
 
 /** @param resource $process */
-function proc_terminate($process, int $signal = SIGTERM): bool {}
+function proc_terminate($process, int $signal = 15): bool {}
 
 /** @param resource $process */
 function proc_get_status($process): array {}
@@ -1186,14 +1191,16 @@ function quoted_printable_encode(string $str): string {}
 
 function mt_srand(int $seed = 0, int $mode = MT_RAND_MT19937): void {}
 
+/** @alias mt_srand */
 function srand(int $seed = 0, int $mode = MT_RAND_MT19937): void {}
 
-function rand(int $min = 0, int $max = PHP_INT_MAX): int {}
+function rand(int $min = UNKNOWN, int $max = UNKNOWN): int {}
 
-function mt_rand(int $min = 0, int $max = PHP_INT_MAX): int {}
+function mt_rand(int $min = UNKNOWN, int $max = UNKNOWN): int {}
 
 function mt_getrandmax(): int {}
 
+/** @alias mt_getrandmax */
 function getrandmax(): int {}
 
 /* random.c */
@@ -1253,13 +1260,13 @@ function stream_filter_append($stream, string $filtername, int $read_write = 0, 
 function stream_filter_remove($stream_filter): bool {}
 
 /**
- * @param resource $context
+ * @param resource|null $context
  * @return resource|false
  */
 function stream_socket_client(string $remote_socket, &$errno = null, &$errstr = null, float $timeout = STREAM_CLIENT_CONNECT, int $flags = UNKNOWN, $context = null) {}
 
 /**
- * @param resource $context
+ * @param resource|null $context
  * @return resource|false
  */
 function stream_socket_server(string $local_socket, &$errno = null, &$errstr = null, int $flags = STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context = null) {}
@@ -1282,7 +1289,7 @@ function stream_socket_sendto($socket, string $data, int $flags = 0, string $add
 
 /**
  * @param resource $stream
- * @param resource $session_stream
+ * @param resource|null $session_stream
  */
 function stream_socket_enable_crypto($stream, bool $enable, ?int $crypto_type = null, $session_stream = null): int|bool {}
 
@@ -1310,7 +1317,9 @@ function stream_supports_lock($stream): bool {}
 /** @param resource $stream */
 function stream_set_write_buffer($stream, int $buffer): int {}
 
-/** @param resource $stream */
+/**
+ * @param resource $stream
+ * @alias stream_set_write_buffer */
 function set_file_buffer($stream, int $buffer): int {}
 
 /** @param resource $stream */
@@ -1319,13 +1328,19 @@ function stream_set_read_buffer($stream, int $buffer): int {}
 /** @param resource $stream */
 function stream_set_blocking($stream, bool $mode): bool {}
 
-/** @param resource $stream */
+/**
+ * @param resource $stream
+ * @alias stream_set_blocking
+ */
 function socket_set_blocking($stream, bool $mode): bool {}
 
 /** @param resource $stream */
 function stream_get_meta_data($stream): array {}
 
-/** @param resource $stream */
+/**
+ * @param resource $stream
+ * @alias stream_get_meta_data
+ */
 function socket_get_status($stream): array {}
 
 /** @param resource $handle */
@@ -1355,7 +1370,10 @@ function stream_set_chunk_size($stream, int $size): int {}
 /** @param resource $socket */
 function stream_set_timeout($socket, int $seconds, int $microseconds = 0): bool {}
 
-/** @param resource $socket */
+/**
+ * @param resource $socket
+ * @alias stream_set_timeout
+ */
 function socket_set_timeout($socket, int $seconds, int $microseconds = 0): bool {}
 #endif
 
@@ -1372,7 +1390,10 @@ function intval($value, int $base = 10): int {}
 /** @param mixed $value */
 function floatval($value): float {}
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ * @alias floatval
+ */
 function doubleval($value): float {}
 
 /** @param mixed $value */
@@ -1393,19 +1414,32 @@ function is_bool($value): bool {}
 /** @param mixed $value */
 function is_int($value): bool {}
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ * @alias is_int
+ */
 function is_integer($value): bool {}
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ * @alias is_int
+ */
 function is_long($value): bool {}
 
 /** @param mixed $value */
 function is_float($value): bool {}
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ * @alias is_float
+ */
 function is_double($value): bool {}
 
-/** @param mixed $value */
+/**
+ * @param mixed $value
+ * @alias is_float
+ * @deprecated
+ */
 function is_real($value): bool {}
 
 /** @param mixed $value */
@@ -1424,7 +1458,7 @@ function is_object($value): bool {}
 function is_scalar($value): bool {}
 
 /** @param mixed $value */
-function is_callable($value, bool $syntax_only = false, &$callable_name = null) {}
+function is_callable($value, bool $syntax_only = false, &$callable_name = null): bool {}
 
 /** @param mixed $value */
 function is_iterable($value): bool {}
@@ -1453,18 +1487,6 @@ function rawurldecode(string $string): string {}
 
 /** @param resource $context */
 function get_headers(string $url, int $format = 0, $context = null): array|false {}
-
-/* user_filters.c */
-
-class php_user_filter {
-    public function filter($in, $out, &$consumed, $closing) {}
-
-    /** @return void */
-    public function onCreate() {}
-
-    /** @return void */
-    public function onClose() {}
-}
 
 /** @param resource $brigade */
 function stream_bucket_make_writeable($brigade): ?object {}
@@ -1515,6 +1537,7 @@ function version_compare(string $version1, string $version2, string $operator = 
 
 /* win32/codepage.c */
 
+#ifdef PHP_WIN32
 function sapi_windows_cp_set(int $cp): bool {}
 
 function sapi_windows_cp_get(string $kind = UNKNOWN): int {}
@@ -1523,7 +1546,7 @@ function sapi_windows_cp_get(string $kind = UNKNOWN): int {}
  * @param int|string $in_codepage
  * @param int|string $out_codepage
  */
-function sapi_windows_cp_conv($in_codepage, $out_codepage, string $subject) {}
+function sapi_windows_cp_conv($in_codepage, $out_codepage, string $subject): ?string {}
 
 function sapi_windows_cp_is_utf8(): bool {}
 
@@ -1532,3 +1555,4 @@ function sapi_windows_set_ctrl_handler($handler, bool $add = true): bool {}
 
 /** @param callable|null $handler */
 function sapi_windows_generate_ctrl_event(int $event, int $pid = 0): bool {}
+#endif

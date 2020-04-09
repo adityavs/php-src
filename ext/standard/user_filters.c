@@ -20,7 +20,7 @@
 #include "php_globals.h"
 #include "ext/standard/basic_functions.h"
 #include "ext/standard/file.h"
-#include "ext/standard/basic_functions_arginfo.h"
+#include "ext/standard/user_filters_arginfo.h"
 
 #define PHP_STREAM_BRIGADE_RES_NAME	"userfilter.bucket brigade"
 #define PHP_STREAM_BUCKET_RES_NAME "userfilter.bucket"
@@ -551,12 +551,12 @@ PHP_FUNCTION(stream_filter_register)
 	ZEND_PARSE_PARAMETERS_END();
 
 	if (!ZSTR_LEN(filtername)) {
-		zend_value_error("Filter name cannot be empty");
+		zend_argument_value_error(1, "must be a non-empty string");
 		RETURN_THROWS();
 	}
 
 	if (!ZSTR_LEN(classname)) {
-		zend_value_error("Class name cannot be empty");
+		zend_argument_value_error(2, "must be a non-empty string");
 		RETURN_THROWS();
 	}
 

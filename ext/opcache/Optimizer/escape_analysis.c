@@ -166,10 +166,10 @@ static inline zend_class_entry *get_class_entry(const zend_script *script, zend_
 
 static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, int var, const zend_script *script) /* {{{ */
 {
-	zend_ssa_op *op = ssa->ops + def;
+	zend_ssa_op *ssa_op = ssa->ops + def;
 	zend_op *opline = op_array->opcodes + def;
 
-	if (op->result_def == var) {
+	if (ssa_op->result_def == var) {
 		switch (opline->opcode) {
 			case ZEND_INIT_ARRAY:
 				return 1;
@@ -204,7 +204,7 @@ static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, in
 				}
 				break;
 		}
-    } else if (op->op1_def == var) {
+    } else if (ssa_op->op1_def == var) {
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
 				if (opline->op2_type == IS_CONST
@@ -216,8 +216,6 @@ static int is_allocation_def(zend_op_array *op_array, zend_ssa *ssa, int def, in
 				}
 				break;
 			case ZEND_ASSIGN_DIM:
-			case ZEND_ASSIGN_OBJ:
-			case ZEND_ASSIGN_OBJ_REF:
 				if (OP1_INFO() & (MAY_BE_UNDEF | MAY_BE_NULL | MAY_BE_FALSE)) {
 					/* implicit object/array allocation */
 					return 1;
@@ -275,10 +273,10 @@ static int is_local_def(zend_op_array *op_array, zend_ssa *ssa, int def, int var
 
 static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int var) /* {{{ */
 {
-	zend_ssa_op *op = ssa->ops + use;
+	zend_ssa_op *ssa_op = ssa->ops + use;
 	zend_op *opline = op_array->opcodes + use;
 
-	if (op->op1_use == var) {
+	if (ssa_op->op1_use == var) {
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
 				/* no_val */
@@ -333,10 +331,10 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 					return 1;
 				}
 				opline--;
-				op--;
+				ssa_op--;
 				if (opline->op1_type != IS_CV
 				 || (OP1_INFO() & MAY_BE_REF)
-				 || (op->op1_def >= 0 && ssa->vars[op->op1_def].alias)) {
+				 || (ssa_op->op1_def >= 0 && ssa->vars[ssa_op->op1_def].alias)) {
 					/* assignment into escaping structure */
 					return 1;
 				}
@@ -347,12 +345,12 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 		}
 	}
 
-	if (op->op2_use == var) {
+	if (ssa_op->op2_use == var) {
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
 				if (opline->op1_type != IS_CV
 				 || (OP1_INFO() & MAY_BE_REF)
-				 || (op->op1_def >= 0 && ssa->vars[op->op1_def].alias)) {
+				 || (ssa_op->op1_def >= 0 && ssa->vars[ssa_op->op1_def].alias)) {
 					/* assignment into escaping variable */
 					return 1;
 				}
@@ -368,7 +366,7 @@ static int is_escape_use(zend_op_array *op_array, zend_ssa *ssa, int use, int va
 		}
 	}
 
-	if (op->result_use == var) {
+	if (ssa_op->result_use == var) {
 		switch (opline->opcode) {
 			case ZEND_ASSIGN:
 			case ZEND_QM_ASSIGN:

@@ -886,13 +886,6 @@ static inline int ct_eval_func_call(
 				return FAILURE;
 			}
 			/* pass */
-		} else if (zend_string_equals_literal(name, "strpos")) {
-			if (Z_TYPE_P(args[0]) != IS_STRING
-					|| Z_TYPE_P(args[1]) != IS_STRING
-					|| !Z_STRLEN_P(args[1])) {
-				return FAILURE;
-			}
-			/* pass */
 		} else if (zend_string_equals_literal(name, "str_split")) {
 			if (Z_TYPE_P(args[0]) != IS_STRING
 					|| Z_TYPE_P(args[1]) != IS_LONG
@@ -960,7 +953,9 @@ static inline int ct_eval_func_call(
 				} ZEND_HASH_FOREACH_END();
 			}
 			/* pass */
-		} else if (zend_string_equals_literal(name, "version_compare")) {
+		} else if (zend_string_equals_literal(name, "strpos")
+				|| zend_string_equals_literal(name, "str_contains")
+				|| zend_string_equals_literal(name, "version_compare")) {
 			if (Z_TYPE_P(args[0]) != IS_STRING
 					|| Z_TYPE_P(args[1]) != IS_STRING) {
 				return FAILURE;
@@ -1201,11 +1196,6 @@ static void sccp_visit_instr(scdf_ctx *scdf, zend_op *opline, zend_ssa_op *ssa_o
 					return;
 				}
 
-				/* If $a in $a->foo=$c is UNDEF, treat it like NULL. There is no warning. */
-				if ((var_info->type & MAY_BE_ANY) == 0) {
-					op1 = &EG(uninitialized_zval);
-				}
-
 				if (IS_BOT(op1)) {
 					SET_RESULT_BOT(result);
 					SET_RESULT_BOT(op1);
@@ -1282,7 +1272,8 @@ static void sccp_visit_instr(scdf_ctx *scdf, zend_op *opline, zend_ssa_op *ssa_o
 			}
 
 			call = ctx->call_map[opline - ctx->scdf.op_array->opcodes];
-			if (IS_TOP(op1) || !call || call->caller_call_opline->opcode != ZEND_DO_ICALL) {
+			if (IS_TOP(op1) || !call || !call->caller_call_opline
+					|| call->caller_call_opline->opcode != ZEND_DO_ICALL) {
 				return;
 			}
 
@@ -2335,7 +2326,7 @@ static int try_remove_definition(sccp_ctx *ctx, int var_num, zend_ssa_var *var, 
 						}
 						break;
 					default:
-						if (zend_may_throw(opline, op_array, ssa)) {
+						if (zend_may_throw(opline, ssa_op, op_array, ssa)) {
 							return 0;
 						}
 						break;

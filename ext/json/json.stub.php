@@ -1,5 +1,7 @@
 <?php
 
+/** @generate-function-entries */
+
 function json_encode($value, int $options = 0, int $depth = 512): string|false {}
 
 /** @return mixed */
@@ -11,5 +13,6 @@ function json_last_error_msg(): string {}
 
 interface JsonSerializable
 {
+    /** @return mixed */
     public function jsonSerialize();
 }

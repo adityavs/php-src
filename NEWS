@@ -14,6 +14,10 @@ PHP                                                                        NEWS
     checks). (Nikita)
   . Fixed bug #69084 (Unclear error message when not implementing a renamed
     abstract trait function). (Nikita)
+  . Fixed bug #62609 (Allow implementing Traversable on abstract classes).
+    (Nikita)
+  . Fixed bug #79462 (method_exists and property_exists incoherent behavior).
+    (cmb)
 
 - CURL:
   . Bumped required libcurl version to 7.29.0. (cmb)
@@ -39,6 +43,9 @@ PHP                                                                        NEWS
   . Removed deprecated png2wbmp() and jpeg2wbmp(). (cmb)
   . Added imagegetinterpolation(). (cmb)
 
+- Iconv:
+  . Dropped support for iconv without proper errno setting. (cmb)
+
 - Intl:
   . Removed deprecated INTL_IDNA_VARIANT_2003. (cmb)
 
@@ -51,6 +58,7 @@ PHP                                                                        NEWS
   . Removed deprecated ldap_sort. (mcmic)
 
 - MBString:
+  . Fixed bug #76999 (mb_regex_set_options() return current options). (cmb)
   . Removed the unused $is_hex parameter from mb_decode_numericentity(). (cmb)
 
 - MySQLi:
@@ -117,6 +125,9 @@ PHP                                                                        NEWS
     filter). (kkopachev)
   . Fixed bug #78385 (parse_url() does not include 'query' when question mark
     is the last char). (Islam Israfilov)
+  . Fixed bug #75902 (str_replace should warn when misused with nested arrays).
+    (Nikita)
+  . Fixed bug #47983 (mixed LF and CRLF line endings in mail()). (cmb)
   . Made quoting of cmd execution functions consistent. (cmb)
 
 - tidy:
@@ -131,7 +142,7 @@ PHP                                                                        NEWS
     (cmb)
 
 - Zip:
-  . Fixed bug #72374 (remove_path strips first char of filename). (tyage)
+  . Fixed bug #72374 (remove_path strips first char of filename). (tyage, Remi)
   . Add ZipArchive::setMtimeName and ZipArchive::setMtimeIndex methods. (Remi)
   . Add ZipArchive::setProgressCallback method (since libzip 1.3.0). (Remi)
   . Add ZipArchive::setCancelCallback method (since libzip 1.6.0). (Remi)
@@ -139,6 +150,17 @@ PHP                                                                        NEWS
     addFromString methods. (Remi)
   . Add "flags" options to ZipArchive::addGlob and addPattern methods
     keeping previous behavior having FL_OVERWRITE by default. (Remi)
-  . Add ZipArchive::replaceFile() method
+  . Add ZipArchive::replaceFile() method. (Remi)
+  . Add lastId property to ZipArchive. (Remi)
+  . ZipArchive::status and ZipArchive::statusSys properties and
+    ZipArchive::getStatusString() method stay valid after the archive
+    is closed. (Remi)
+  . Fixed bug #50678 (files extracted by ZipArchive class lost their
+    original modified time). (Remi)
+  . Implemented FR #77960 (add compression / encryption options for
+    ZipArchive::addGlob and ZipArchive::addPattern). (Remi)
+  . Add ZipArchive::EM_UNKNOWN and ZipArchive::EM_TRAD_PKWARE constants. (Remi)
+  . Add ZipArchive::isCompressionMethodSupported() and
+    ZipArchive::isEncryptionMethodSupported() method (libzip 1.7.0). (Remi)
 
 <<< NOTE: Insert NEWS from last stable release here prior to actual release! >>>

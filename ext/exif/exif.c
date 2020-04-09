@@ -69,17 +69,6 @@ typedef unsigned char uchar;
 
 #define MAX_IFD_NESTING_LEVEL 150
 
-/* {{{ exif_functions[]
- */
-static const zend_function_entry exif_functions[] = {
-	PHP_FE(exif_read_data, arginfo_exif_read_data)
-	PHP_FE(exif_tagname, arginfo_exif_tagname)
-	PHP_FE(exif_thumbnail, arginfo_exif_thumbnail)
-	PHP_FE(exif_imagetype, arginfo_exif_imagetype)
-	PHP_FE_END
-};
-/* }}} */
-
 /* {{{ PHP_MINFO_FUNCTION
  */
 PHP_MINFO_FUNCTION(exif)
@@ -220,7 +209,7 @@ zend_module_entry exif_module_entry = {
 	STANDARD_MODULE_HEADER_EX, NULL,
 	exif_module_deps,
 	"exif",
-	exif_functions,
+	ext_functions,
 	PHP_MINIT(exif),
 	PHP_MSHUTDOWN(exif),
 	NULL, NULL,
@@ -3642,6 +3631,16 @@ static void exif_process_TIFF_in_JPEG(image_info_type *ImageInfo, char *CharBuf,
 	unsigned exif_value_2a, offset_of_ifd;
 	exif_offset_info info;
 
+	if (length < 2) {
+		exif_error_docref(NULL EXIFERR_CC, ImageInfo, E_WARNING, "Missing TIFF alignment marker");
+		return;
+	}
+
+	if (length < 2) {
+		exif_error_docref(NULL EXIFERR_CC, ImageInfo, E_WARNING, "Missing TIFF alignment marker");
+		return;
+	}
+
 	/* set the thumbnail stuff to nothing so we can test to see if they get set up */
 	if (memcmp(CharBuf, "II", 2) == 0) {
 		ImageInfo->motorola_intel = 0;
@@ -3795,7 +3794,7 @@ static int exif_scan_JPEG_header(image_info_type *ImageInfo)
 			return FALSE;
 		}
 
-		sn = exif_file_sections_add(ImageInfo, marker, itemlen+1, NULL);
+		sn = exif_file_sections_add(ImageInfo, marker, itemlen, NULL);
 		Data = ImageInfo->file.list[sn].data;
 
 		/* Store first two pre-read bytes. */

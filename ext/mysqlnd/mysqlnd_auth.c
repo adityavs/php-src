@@ -507,7 +507,7 @@ mysqlnd_auth_change_user(MYSQLND_CONN_DATA * const conn,
 		conn->password.s = tmp;
 
 		if (conn->last_message.s) {
-			mnd_pefree(conn->last_message.s, conn->persistent);
+			mnd_efree(conn->last_message.s);
 			conn->last_message.s = NULL;
 		}
 		UPSERT_STATUS_RESET(conn->upsert_status);
@@ -726,6 +726,7 @@ mysqlnd_sha256_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t server_pub
 	*/
 	if (server_public_key_len <= passwd_len + 41) {
 		/* password message is to long */
+		RSA_free(server_public_key);
 		SET_CLIENT_ERROR(conn->error_info, CR_UNKNOWN_ERROR, UNKNOWN_SQLSTATE, "password is too long");
 		DBG_ERR("password is too long");
 		DBG_RETURN(NULL);
@@ -806,6 +807,7 @@ mysqlnd_sha256_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t server_pub
 	*/
 	if ((size_t) server_public_key_len <= passwd_len + 41) {
 		/* password message is to long */
+		BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
 		SET_CLIENT_ERROR(conn->error_info, CR_UNKNOWN_ERROR, UNKNOWN_SQLSTATE, "password is too long");
 		DBG_ERR("password is too long");
 		DBG_RETURN(0);
@@ -815,6 +817,7 @@ mysqlnd_sha256_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t server_pub
 	ret = malloc(*auth_data_len);
 	if (BCryptEncrypt((BCRYPT_KEY_HANDLE) server_public_key, xor_str, passwd_len + 1, &padding_info,
 			NULL, 0, ret, server_public_key_len, &server_public_key_len, BCRYPT_PAD_OAEP)) {
+		BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
 		DBG_RETURN(0);
 	}
 	BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
@@ -1016,6 +1019,7 @@ mysqlnd_caching_sha2_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t serv
 	*/
 	if (server_public_key_len <= passwd_len + 41) {
 		/* password message is to long */
+		RSA_free(server_public_key);
 		SET_CLIENT_ERROR(conn->error_info, CR_UNKNOWN_ERROR, UNKNOWN_SQLSTATE, "password is too long");
 		DBG_ERR("password is too long");
 		DBG_RETURN(0);
@@ -1023,6 +1027,7 @@ mysqlnd_caching_sha2_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t serv
 
 	*crypted = emalloc(server_public_key_len);
 	RSA_public_encrypt(passwd_len + 1, (zend_uchar *) xor_str, *crypted, server_public_key, RSA_PKCS1_OAEP_PADDING);
+	RSA_free(server_public_key);
 	DBG_RETURN(server_public_key_len);
 }
 /* }}} */
@@ -1052,6 +1057,7 @@ mysqlnd_caching_sha2_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t serv
 	*/
 	if ((size_t) server_public_key_len <= passwd_len + 41) {
 		/* password message is to long */
+		BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
 		SET_CLIENT_ERROR(conn->error_info, CR_UNKNOWN_ERROR, UNKNOWN_SQLSTATE, "password is too long");
 		DBG_ERR("password is too long");
 		DBG_RETURN(0);
@@ -1060,8 +1066,10 @@ mysqlnd_caching_sha2_public_encrypt(MYSQLND_CONN_DATA * conn, mysqlnd_rsa_t serv
 	*crypted = emalloc(server_public_key_len);
 	if (BCryptEncrypt((BCRYPT_KEY_HANDLE) server_public_key, xor_str, passwd_len + 1, &padding_info,
 			NULL, 0, *crypted, server_public_key_len, &server_public_key_len, BCRYPT_PAD_OAEP)) {
+		BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
 		DBG_RETURN(0);
 	}
+	BCryptDestroyKey((BCRYPT_KEY_HANDLE) server_public_key);
 	DBG_RETURN(server_public_key_len);
 }
 /* }}} */

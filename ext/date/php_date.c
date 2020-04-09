@@ -76,68 +76,6 @@ PHPAPI time_t php_time()
 
 #include "php_date_arginfo.h"
 
-/* {{{ Function table */
-static const zend_function_entry date_functions[] = {
-	PHP_FE(strtotime, arginfo_strtotime)
-	PHP_FE(date, arginfo_date)
-	PHP_FE(idate, arginfo_idate)
-	PHP_FE(gmdate, arginfo_gmdate)
-	PHP_FE(mktime, arginfo_mktime)
-	PHP_FE(gmmktime, arginfo_gmmktime)
-	PHP_FE(checkdate, arginfo_checkdate)
-	PHP_FE(strftime, arginfo_strftime)
-	PHP_FE(gmstrftime, arginfo_gmstrftime)
-	PHP_FE(time, arginfo_time)
-	PHP_FE(localtime, arginfo_localtime)
-	PHP_FE(getdate, arginfo_getdate)
-
-	/* Advanced Interface */
-	PHP_FE(date_create, arginfo_date_create)
-	PHP_FE(date_create_immutable, arginfo_date_create_immutable)
-	PHP_FE(date_create_from_format, arginfo_date_create_from_format)
-	PHP_FE(date_create_immutable_from_format, arginfo_date_create_immutable_from_format)
-	PHP_FE(date_parse, arginfo_date_parse)
-	PHP_FE(date_parse_from_format, arginfo_date_parse_from_format)
-	PHP_FE(date_get_last_errors, arginfo_date_get_last_errors)
-	PHP_FE(date_format, arginfo_date_format)
-	PHP_FE(date_modify, arginfo_date_modify)
-	PHP_FE(date_add, arginfo_date_add)
-	PHP_FE(date_sub, arginfo_date_sub)
-	PHP_FE(date_timezone_get, arginfo_date_timezone_get)
-	PHP_FE(date_timezone_set, arginfo_date_timezone_set)
-	PHP_FE(date_offset_get, arginfo_date_offset_get)
-	PHP_FE(date_diff, arginfo_date_diff)
-
-	PHP_FE(date_time_set, arginfo_date_time_set)
-	PHP_FE(date_date_set, arginfo_date_date_set)
-	PHP_FE(date_isodate_set, arginfo_date_isodate_set)
-	PHP_FE(date_timestamp_set, arginfo_date_timestamp_set)
-	PHP_FE(date_timestamp_get, arginfo_date_timestamp_get)
-
-	PHP_FE(timezone_open, arginfo_timezone_open)
-	PHP_FE(timezone_name_get, arginfo_timezone_name_get)
-	PHP_FE(timezone_name_from_abbr, arginfo_timezone_name_from_abbr)
-	PHP_FE(timezone_offset_get, arginfo_timezone_offset_get)
-	PHP_FE(timezone_transitions_get, arginfo_timezone_transitions_get)
-	PHP_FE(timezone_location_get, arginfo_timezone_location_get)
-	PHP_FE(timezone_identifiers_list, arginfo_timezone_identifiers_list)
-	PHP_FE(timezone_abbreviations_list, arginfo_timezone_abbreviations_list)
-	PHP_FE(timezone_version_get, arginfo_timezone_version_get)
-
-	PHP_FE(date_interval_create_from_date_string, arginfo_date_interval_create_from_date_string)
-	PHP_FE(date_interval_format, arginfo_date_interval_format)
-
-	/* Options and Configuration */
-	PHP_FE(date_default_timezone_set, arginfo_date_default_timezone_set)
-	PHP_FE(date_default_timezone_get, arginfo_date_default_timezone_get)
-
-	/* Astronomical functions */
-	PHP_FE(date_sunrise, arginfo_date_sunrise)
-	PHP_FE(date_sunset, arginfo_date_sunset)
-	PHP_FE(date_sun_info, arginfo_date_sun_info)
-	PHP_FE_END
-};
-
 static const zend_function_entry date_funcs_interface[] = {
 	PHP_ABSTRACT_ME(DateTimeInterface, format, arginfo_class_DateTimeInterface_format)
 	PHP_ABSTRACT_ME(DateTimeInterface, getTimezone, arginfo_class_DateTimeInterface_getTimezone)
@@ -342,13 +280,15 @@ static zval *date_period_read_property(zend_object *object, zend_string *name, i
 static zval *date_period_write_property(zend_object *object, zend_string *name, zval *value, void **cache_slot);
 static zval *date_period_get_property_ptr_ptr(zend_object *object, zend_string *name, int type, void **cache_slot);
 
+static int date_object_compare_timezone(zval *tz1, zval *tz2);
+
 /* {{{ Module struct */
 zend_module_entry date_module_entry = {
 	STANDARD_MODULE_HEADER_EX,
 	NULL,
 	NULL,
 	"date",                     /* extension name */
-	date_functions,             /* function list */
+	ext_functions,              /* function list */
 	PHP_MINIT(date),            /* process startup */
 	PHP_MSHUTDOWN(date),        /* process shutdown */
 	PHP_RINIT(date),            /* request startup */
@@ -1794,6 +1734,7 @@ static void date_register_classes(void) /* {{{ */
 	date_object_handlers_timezone.get_properties_for = date_object_get_properties_for_timezone;
 	date_object_handlers_timezone.get_gc = date_object_get_gc_timezone;
 	date_object_handlers_timezone.get_debug_info = date_object_get_debug_info_timezone;
+	date_object_handlers_timezone.compare = date_object_compare_timezone;
 
 #define REGISTER_TIMEZONE_CLASS_CONST_STRING(const_name, value) \
 	zend_declare_class_constant_long(date_ce_timezone, const_name, sizeof(const_name)-1, value);
@@ -1900,7 +1841,7 @@ static int date_object_compare_date(zval *d1, zval *d2) /* {{{ */
 
 	if (!o1->time || !o2->time) {
 		php_error_docref(NULL, E_WARNING, "Trying to compare an incomplete DateTime or DateTimeImmutable object");
-		return 1;
+		return ZEND_UNCOMPARABLE;
 	}
 	if (!o1->time->sse_uptodate) {
 		timelib_update_ts(o1->time, o1->time->tz_info);
@@ -2022,6 +1963,33 @@ static zend_object *date_object_clone_timezone(zend_object *this_ptr) /* {{{ */
 	}
 
 	return &new_obj->std;
+} /* }}} */
+
+static int date_object_compare_timezone(zval *tz1, zval *tz2) /* {{{ */
+{
+	php_timezone_obj *o1, *o2;
+
+	ZEND_COMPARE_OBJECTS_FALLBACK(tz1, tz2);
+
+	o1 = Z_PHPTIMEZONE_P(tz1);
+	o2 = Z_PHPTIMEZONE_P(tz2);
+
+	ZEND_ASSERT(o1->initialized && o2->initialized);
+
+	if (o1->type != o2->type) {
+		php_error_docref(NULL, E_WARNING, "Trying to compare different kinds of DateTimeZone objects");
+		return ZEND_UNCOMPARABLE;
+	}
+
+	switch (o1->type) {
+		case TIMELIB_ZONETYPE_OFFSET:
+			return o1->tzi.utc_offset == o2->tzi.utc_offset ? 0 : 1;
+		case TIMELIB_ZONETYPE_ABBR:
+			return strcmp(o1->tzi.z.abbr, o2->tzi.z.abbr) ? 1 : 0;
+		case TIMELIB_ZONETYPE_ID:
+			return strcmp(o1->tzi.tz->name, o2->tzi.tz->name) ? 1 : 0;
+		EMPTY_SWITCH_DEFAULT_CASE();
+	}
 } /* }}} */
 
 static void php_timezone_to_string(php_timezone_obj *tzobj, zval *zv)
@@ -3263,6 +3231,7 @@ static void php_date_time_set(zval *object, zend_long h, zend_long i, zend_long 
 	dateobj->time->s = s;
 	dateobj->time->us = ms;
 	timelib_update_ts(dateobj->time, NULL);
+	timelib_update_from_sse(dateobj->time);
 } /* }}} */
 
 /* {{{ proto DateTime date_time_set(DateTime object, int hour, int minute[, int second[, int microseconds]])
@@ -3870,7 +3839,7 @@ static int date_interval_compare_objects(zval *o1, zval *o2) {
 	 * smaller, equal or greater depending on the point in time at which the interval starts. As
 	 * such, we treat DateInterval objects are non-comparable and emit a warning. */
 	zend_error(E_WARNING, "Cannot compare DateInterval objects");
-	return 1;
+	return ZEND_UNCOMPARABLE;
 }
 
 /* {{{ date_interval_read_property */

@@ -32,6 +32,7 @@
 #include "spl_engine.h"
 #include "spl_iterators.h"
 #include "spl_directory.h"
+#include "spl_directory_arginfo.h"
 #include "spl_exceptions.h"
 
 #include "php.h"
@@ -470,7 +471,7 @@ static spl_filesystem_object *spl_filesystem_object_create_info(spl_filesystem_o
 	return intern;
 } /* }}} */
 
-static spl_filesystem_object *spl_filesystem_object_create_type(int ht, spl_filesystem_object *source, int type, zend_class_entry *ce, zval *return_value) /* {{{ */
+static spl_filesystem_object *spl_filesystem_object_create_type(int num_args, spl_filesystem_object *source, int type, zend_class_entry *ce, zval *return_value) /* {{{ */
 {
 	spl_filesystem_object *intern;
 	zend_bool use_include_path = 0;
@@ -521,6 +522,17 @@ static spl_filesystem_object *spl_filesystem_object_create_type(int ht, spl_file
 				break;
 			}
 
+			char *open_mode = "r";
+			size_t open_mode_len = 1;
+			zval *resource = NULL;
+
+			if (zend_parse_parameters(num_args, "|sbr",
+				&open_mode, &open_mode_len, &use_include_path, &resource) == FAILURE
+			) {
+				zend_restore_error_handling(&error_handling);
+				return NULL;
+			}
+
 			intern = spl_filesystem_from_obj(spl_filesystem_object_new_ex(ce));
 
 			ZVAL_OBJ(return_value, &intern->std);
@@ -529,7 +541,7 @@ static spl_filesystem_object *spl_filesystem_object_create_type(int ht, spl_file
 
 			if (ce->constructor->common.scope != spl_ce_SplFileObject) {
 				ZVAL_STRINGL(&arg1, source->file_name, source->file_name_len);
-				ZVAL_STRINGL(&arg2, "r", 1);
+				ZVAL_STRINGL(&arg2, open_mode, open_mode_len);
 				zend_call_method_with_2_params(Z_OBJ_P(return_value), ce, &ce->constructor, "__construct", NULL, &arg1, &arg2);
 				zval_ptr_dtor(&arg1);
 				zval_ptr_dtor(&arg2);
@@ -539,19 +551,9 @@ static spl_filesystem_object *spl_filesystem_object_create_type(int ht, spl_file
 				intern->_path = spl_filesystem_object_get_path(source, &intern->_path_len);
 				intern->_path = estrndup(intern->_path, intern->_path_len);
 
-				intern->u.file.open_mode = "r";
-				intern->u.file.open_mode_len = 1;
-
-				if (ht && zend_parse_parameters(ht, "|sbr",
-							&intern->u.file.open_mode, &intern->u.file.open_mode_len,
-							&use_include_path, &intern->u.file.zcontext) == FAILURE) {
-					zend_restore_error_handling(&error_handling);
-					intern->u.file.open_mode = NULL;
-					intern->file_name = NULL;
-					zval_ptr_dtor(return_value);
-					ZVAL_NULL(return_value);
-					return NULL;
-				}
+				intern->u.file.open_mode = open_mode;
+				intern->u.file.open_mode_len = open_mode_len;
+				intern->u.file.zcontext = resource;
 
 				if (spl_filesystem_file_open(intern, use_include_path, 0) == FAILURE) {
 					zend_restore_error_handling(&error_handling);
@@ -594,7 +596,7 @@ static char *spl_filesystem_object_get_pathname(spl_filesystem_object *intern, s
 }
 /* }}} */
 
-static HashTable *spl_filesystem_object_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
+static inline HashTable *spl_filesystem_object_get_debug_info(zend_object *object) /* {{{ */
 {
 	spl_filesystem_object *intern = spl_filesystem_from_obj(object);
 	zval tmp;
@@ -603,8 +605,6 @@ static HashTable *spl_filesystem_object_get_debug_info(zend_object *object, int 
 	char *path;
 	size_t  path_len;
 	char stmp[2];
-
-	*is_temp = 1;
 
 	if (!intern->std.properties) {
 		rebuild_object_properties(&intern->std);
@@ -700,8 +700,6 @@ void spl_filesystem_object_construct(INTERNAL_FUNCTION_PARAMETERS, zend_long cto
 	zend_long flags;
 	zend_error_handling error_handling;
 
-	zend_replace_error_handling(EH_THROW, spl_ce_UnexpectedValueException, &error_handling);
-
 	if (SPL_HAS_FLAG(ctor_flags, DIT_CTOR_FLAGS)) {
 		flags = SPL_FILE_DIR_KEY_AS_PATHNAME|SPL_FILE_DIR_CURRENT_AS_FILEINFO;
 		parsed = zend_parse_parameters(ZEND_NUM_ARGS(), "p|l", &path, &len, &flags);
@@ -716,23 +714,23 @@ void spl_filesystem_object_construct(INTERNAL_FUNCTION_PARAMETERS, zend_long cto
 		flags |= SPL_FILE_DIR_UNIXPATHS;
 	}
 	if (parsed == FAILURE) {
-		zend_restore_error_handling(&error_handling);
 		return;
 	}
+
 	if (!len) {
 		zend_throw_exception_ex(spl_ce_RuntimeException, 0, "Directory name must not be empty.");
-		zend_restore_error_handling(&error_handling);
 		return;
 	}
 
 	intern = Z_SPLFILESYSTEM_P(ZEND_THIS);
 	if (intern->_path) {
 		/* object is already initialized */
-		zend_restore_error_handling(&error_handling);
 		php_error_docref(NULL, E_WARNING, "Directory object is already initialized");
 		return;
 	}
 	intern->flags = flags;
+
+	zend_replace_error_handling(EH_THROW, spl_ce_UnexpectedValueException, &error_handling);
 #ifdef HAVE_GLOB
 	if (SPL_HAS_FLAG(ctor_flags, DIT_CTOR_GLOB) && strstr(path, "glob://") != path) {
 		spprintf(&path, 0, "glob://%s", path);
@@ -1101,7 +1099,6 @@ SPL_METHOD(FilesystemIterator, current)
 	} else {
 		ZVAL_OBJ(return_value, Z_OBJ_P(ZEND_THIS));
 		Z_ADDREF_P(return_value);
-		/*RETURN_STRING(intern->u.dir.entry.d_name, 1);*/
 	}
 }
 /* }}} */
@@ -1285,7 +1282,6 @@ SPL_METHOD(SplFileInfo, getLinkTarget)
 }
 /* }}} */
 
-#if HAVE_REALPATH || defined(ZTS)
 /* {{{ proto string SplFileInfo::getRealPath()
    Return the resolved path */
 SPL_METHOD(SplFileInfo, getRealPath)
@@ -1326,7 +1322,6 @@ SPL_METHOD(SplFileInfo, getRealPath)
 	zend_restore_error_handling(&error_handling);
 }
 /* }}} */
-#endif
 
 /* {{{ proto SplFileObject SplFileInfo::openFile([string mode = 'r' [, bool use_include_path  [, resource context]]])
    Open the current file */
@@ -1405,6 +1400,16 @@ SPL_METHOD(SplFileInfo, getPathInfo)
 	}
 }
 /* }}} */
+
+/* {{{ proto void SplFileInfo::__debugInfo() */
+SPL_METHOD(SplFileInfo, __debugInfo)
+{
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
+
+	RETURN_ARR(spl_filesystem_object_get_debug_info(Z_OBJ_P(ZEND_THIS)));
+} /* }}} */
 
 /* {{{  proto SplFileInfo::_bad_state_ex(void) */
 SPL_METHOD(SplFileInfo, _bad_state_ex)
@@ -1876,133 +1881,85 @@ static int spl_filesystem_object_cast(zend_object *readobj, zval *writeobj, int 
 }
 /* }}} */
 
-/* {{{ declare method parameters */
-/* supply a name and default to call by parameter */
-ZEND_BEGIN_ARG_INFO(arginfo_info___construct, 0)
-	ZEND_ARG_INFO(0, file_name)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_info_openFile, 0, 0, 0)
-	ZEND_ARG_INFO(0, open_mode)
-	ZEND_ARG_INFO(0, use_include_path)
-	ZEND_ARG_INFO(0, context)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_info_optinalFileClass, 0, 0, 0)
-	ZEND_ARG_INFO(0, class_name)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_optinalSuffix, 0, 0, 0)
-	ZEND_ARG_INFO(0, suffix)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_splfileinfo_void, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_splfileinfo___toString, 0, 0, IS_STRING, 0)
-ZEND_END_ARG_INFO()
-
 /* the method table */
 /* each method can have its own parameters and visibility */
 static const zend_function_entry spl_SplFileInfo_functions[] = {
-	SPL_ME(SplFileInfo,       __construct,   arginfo_info___construct, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getPath,       arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getFilename,   arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getExtension,  arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getBasename,   arginfo_optinalSuffix, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getPathname,   arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getPerms,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getInode,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getSize,       arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getOwner,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getGroup,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getATime,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getMTime,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getCTime,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getType,       arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isWritable,    arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isReadable,    arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isExecutable,  arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isFile,        arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isDir,         arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       isLink,        arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getLinkTarget, arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-#if HAVE_REALPATH || defined(ZTS)
-	SPL_ME(SplFileInfo,       getRealPath,   arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-#endif
-	SPL_ME(SplFileInfo,       getFileInfo,   arginfo_info_optinalFileClass, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       getPathInfo,   arginfo_info_optinalFileClass, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       openFile,      arginfo_info_openFile,         ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       setFileClass,  arginfo_info_optinalFileClass, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       setInfoClass,  arginfo_info_optinalFileClass, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileInfo,       _bad_state_ex, arginfo_splfileinfo_void,		ZEND_ACC_PUBLIC|ZEND_ACC_FINAL)
-	SPL_MA(SplFileInfo,       __toString, SplFileInfo, getPathname, arginfo_splfileinfo___toString, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       __construct,   arginfo_class_SplFileInfo___construct, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getPath,       arginfo_class_SplFileInfo_getPath, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getFilename,   arginfo_class_SplFileInfo_getFilename, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getExtension,  arginfo_class_SplFileInfo_getExtension, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getBasename,   arginfo_class_SplFileInfo_getBasename, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getPathname,   arginfo_class_SplFileInfo_getPathname, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getPerms,      arginfo_class_SplFileInfo_getPerms, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getInode,      arginfo_class_SplFileInfo_getInode, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getSize,       arginfo_class_SplFileInfo_getSize, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getOwner,      arginfo_class_SplFileInfo_getOwner, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getGroup,      arginfo_class_SplFileInfo_getGroup, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getATime,      arginfo_class_SplFileInfo_getATime, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getMTime,      arginfo_class_SplFileInfo_getMTime, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getCTime,      arginfo_class_SplFileInfo_getCTime, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getType,       arginfo_class_SplFileInfo_getType, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isWritable,    arginfo_class_SplFileInfo_isWritable, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isReadable,    arginfo_class_SplFileInfo_isReadable, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isExecutable,  arginfo_class_SplFileInfo_isExecutable, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isFile,        arginfo_class_SplFileInfo_isFile, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isDir,         arginfo_class_SplFileInfo_isDir, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       isLink,        arginfo_class_SplFileInfo_isLink, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getLinkTarget, arginfo_class_SplFileInfo_getLinkTarget, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getRealPath,   arginfo_class_SplFileInfo_getRealPath, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getFileInfo,   arginfo_class_SplFileInfo_getFileInfo, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       getPathInfo,   arginfo_class_SplFileInfo_getPathInfo, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       openFile,      arginfo_class_SplFileInfo_openFile,         ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       setFileClass,  arginfo_class_SplFileInfo_setFileClass, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       setInfoClass,  arginfo_class_SplFileInfo_setInfoClass, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       __debugInfo,   arginfo_class_SplFileInfo___debugInfo, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileInfo,       _bad_state_ex, arginfo_class_SplFileInfo__bad_state_ex,		ZEND_ACC_PUBLIC|ZEND_ACC_FINAL)
+	SPL_MA(SplFileInfo,       __toString, SplFileInfo, getPathname, arginfo_class_SplFileInfo___toString, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
-
-ZEND_BEGIN_ARG_INFO(arginfo_dir___construct, 0)
-	ZEND_ARG_INFO(0, path)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_dir_it_seek, 0)
-	ZEND_ARG_INFO(0, position)
-ZEND_END_ARG_INFO();
 
 /* the method table */
 /* each method can have its own parameters and visibility */
 static const zend_function_entry spl_DirectoryIterator_functions[] = {
-	SPL_ME(DirectoryIterator, __construct,   arginfo_dir___construct, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, getFilename,   arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, getExtension,  arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, getBasename,   arginfo_optinalSuffix, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, isDot,         arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, rewind,        arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, valid,         arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, key,           arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, current,       arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, next,          arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator, seek,          arginfo_dir_it_seek, ZEND_ACC_PUBLIC)
-	SPL_MA(DirectoryIterator, __toString, DirectoryIterator, getFilename, arginfo_splfileinfo___toString, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, __construct,   arginfo_class_DirectoryIterator___construct, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, getFilename,   arginfo_class_DirectoryIterator_getFilename, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, getExtension,  arginfo_class_DirectoryIterator_getExtension, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, getBasename,   arginfo_class_DirectoryIterator_getBasename, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, isDot,         arginfo_class_DirectoryIterator_isDot, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, rewind,        arginfo_class_DirectoryIterator_rewind, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, valid,         arginfo_class_DirectoryIterator_valid, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, key,           arginfo_class_DirectoryIterator_key, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, current,       arginfo_class_DirectoryIterator_current, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, next,          arginfo_class_DirectoryIterator_next, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator, seek,          arginfo_class_DirectoryIterator_seek, ZEND_ACC_PUBLIC)
+	SPL_MA(DirectoryIterator, __toString, DirectoryIterator, getFilename, arginfo_class_DirectoryIterator___toString, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_r_dir___construct, 0, 0, 1)
-	ZEND_ARG_INFO(0, path)
-	ZEND_ARG_INFO(0, flags)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_r_dir_hasChildren, 0, 0, 0)
-	ZEND_ARG_INFO(0, allow_links)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_r_dir_setFlags, 0, 0, 0)
-	ZEND_ARG_INFO(0, flags)
-ZEND_END_ARG_INFO()
-
 static const zend_function_entry spl_FilesystemIterator_functions[] = {
-	SPL_ME(FilesystemIterator, __construct,   arginfo_r_dir___construct, ZEND_ACC_PUBLIC)
-	SPL_ME(FilesystemIterator, rewind,        arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(DirectoryIterator,  next,          arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(FilesystemIterator, key,           arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(FilesystemIterator, current,       arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(FilesystemIterator, getFlags,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(FilesystemIterator, setFlags,      arginfo_r_dir_setFlags, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, __construct,   arginfo_class_FilesystemIterator___construct, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, rewind,        arginfo_class_FilesystemIterator_rewind, ZEND_ACC_PUBLIC)
+	SPL_ME(DirectoryIterator,  next,          arginfo_class_FilesystemIterator_next, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, key,           arginfo_class_FilesystemIterator_key, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, current,       arginfo_class_FilesystemIterator_current, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, getFlags,      arginfo_class_FilesystemIterator_getFlags, ZEND_ACC_PUBLIC)
+	SPL_ME(FilesystemIterator, setFlags,      arginfo_class_FilesystemIterator_setFlags, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
 static const zend_function_entry spl_RecursiveDirectoryIterator_functions[] = {
-	SPL_ME(RecursiveDirectoryIterator, __construct,   arginfo_r_dir___construct, ZEND_ACC_PUBLIC)
-	SPL_ME(RecursiveDirectoryIterator, hasChildren,   arginfo_r_dir_hasChildren, ZEND_ACC_PUBLIC)
-	SPL_ME(RecursiveDirectoryIterator, getChildren,   arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(RecursiveDirectoryIterator, getSubPath,    arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_ME(RecursiveDirectoryIterator, getSubPathname,arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
+	SPL_ME(RecursiveDirectoryIterator, __construct,   arginfo_class_RecursiveDirectoryIterator___construct, ZEND_ACC_PUBLIC)
+	SPL_ME(RecursiveDirectoryIterator, hasChildren,   arginfo_class_RecursiveDirectoryIterator_hasChildren, ZEND_ACC_PUBLIC)
+	SPL_ME(RecursiveDirectoryIterator, getChildren,   arginfo_class_RecursiveDirectoryIterator_getChildren, ZEND_ACC_PUBLIC)
+	SPL_ME(RecursiveDirectoryIterator, getSubPath,    arginfo_class_RecursiveDirectoryIterator_getSubPath, ZEND_ACC_PUBLIC)
+	SPL_ME(RecursiveDirectoryIterator, getSubPathname,arginfo_class_RecursiveDirectoryIterator_getSubPathname, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
 #ifdef HAVE_GLOB
 static const zend_function_entry spl_GlobIterator_functions[] = {
-	SPL_ME(GlobIterator, __construct,   arginfo_r_dir___construct, ZEND_ACC_PUBLIC)
-	SPL_ME(GlobIterator, count,         arginfo_splfileinfo_void,  ZEND_ACC_PUBLIC)
+	SPL_ME(GlobIterator, __construct,   arginfo_class_GlobIterator___construct, ZEND_ACC_PUBLIC)
+	SPL_ME(GlobIterator, count,         arginfo_class_GlobIterator_count,  ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 #endif
@@ -2981,110 +2938,45 @@ SPL_METHOD(SplFileObject, seek)
 	}
 } /* }}} */
 
-/* {{{ Function/Class/Method definitions */
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object___construct, 0, 0, 1)
-	ZEND_ARG_INFO(0, file_name)
-	ZEND_ARG_INFO(0, open_mode)
-	ZEND_ARG_INFO(0, use_include_path)
-	ZEND_ARG_INFO(0, context)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_file_object_setFlags, 0)
-	ZEND_ARG_INFO(0, flags)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO(arginfo_file_object_setMaxLineLen, 0)
-	ZEND_ARG_INFO(0, max_len)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fgetcsv, 0, 0, 0)
-	ZEND_ARG_INFO(0, delimiter)
-	ZEND_ARG_INFO(0, enclosure)
-	ZEND_ARG_INFO(0, escape)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fputcsv, 0, 0, 1)
-	ZEND_ARG_INFO(0, fields)
-	ZEND_ARG_INFO(0, delimiter)
-	ZEND_ARG_INFO(0, enclosure)
-	ZEND_ARG_INFO(0, escape)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_flock, 0, 0, 1)
-	ZEND_ARG_INFO(0, operation)
-	ZEND_ARG_INFO(1, wouldblock)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fseek, 0, 0, 1)
-	ZEND_ARG_INFO(0, pos)
-	ZEND_ARG_INFO(0, whence)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fscanf, 0, 0, 1)
-	ZEND_ARG_INFO(0, format)
-	ZEND_ARG_VARIADIC_INFO(1, vars)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fwrite, 0, 0, 1)
-	ZEND_ARG_INFO(0, str)
-	ZEND_ARG_INFO(0, length)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_fread, 0, 0, 1)
-	ZEND_ARG_INFO(0, length)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_ftruncate, 0, 0, 1)
-	ZEND_ARG_INFO(0, size)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_file_object_seek, 0, 0, 1)
-	ZEND_ARG_INFO(0, line_pos)
-ZEND_END_ARG_INFO()
-
 static const zend_function_entry spl_SplFileObject_functions[] = {
-	SPL_ME(SplFileObject, __construct,    arginfo_file_object___construct,   ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, rewind,         arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, eof,            arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, valid,          arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fgets,          arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fgetcsv,        arginfo_file_object_fgetcsv,       ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fputcsv,        arginfo_file_object_fputcsv,       ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, setCsvControl,  arginfo_file_object_fgetcsv,       ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, getCsvControl,  arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, flock,          arginfo_file_object_flock,         ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fflush,         arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, ftell,          arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fseek,          arginfo_file_object_fseek,         ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fgetc,          arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fpassthru,      arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fscanf,         arginfo_file_object_fscanf,        ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fwrite,         arginfo_file_object_fwrite,        ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fread,          arginfo_file_object_fread,         ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, fstat,          arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, ftruncate,      arginfo_file_object_ftruncate,     ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, current,        arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, key,            arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, next,           arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, setFlags,       arginfo_file_object_setFlags,      ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, getFlags,       arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, setMaxLineLen,  arginfo_file_object_setMaxLineLen, ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, getMaxLineLen,  arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, hasChildren,    arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, getChildren,    arginfo_splfileinfo_void,          ZEND_ACC_PUBLIC)
-	SPL_ME(SplFileObject, seek,           arginfo_file_object_seek,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, __construct,    arginfo_class_SplFileObject___construct,   ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, rewind,         arginfo_class_SplFileObject_rewind,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, eof,            arginfo_class_SplFileObject_eof,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, valid,          arginfo_class_SplFileObject_valid,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fgets,          arginfo_class_SplFileObject_fgets,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fgetcsv,        arginfo_class_SplFileObject_fgetcsv,       ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fputcsv,        arginfo_class_SplFileObject_fputcsv,       ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, setCsvControl,  arginfo_class_SplFileObject_setCsvControl,       ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, getCsvControl,  arginfo_class_SplFileObject_getCsvControl,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, flock,          arginfo_class_SplFileObject_flock,         ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fflush,         arginfo_class_SplFileObject_fflush,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, ftell,          arginfo_class_SplFileObject_ftell,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fseek,          arginfo_class_SplFileObject_fseek,         ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fgetc,          arginfo_class_SplFileObject_fgetc,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fpassthru,      arginfo_class_SplFileObject_fpassthru,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fscanf,         arginfo_class_SplFileObject_fscanf,        ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fwrite,         arginfo_class_SplFileObject_fwrite,        ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fread,          arginfo_class_SplFileObject_fread,         ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, fstat,          arginfo_class_SplFileObject_fstat,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, ftruncate,      arginfo_class_SplFileObject_ftruncate,     ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, current,        arginfo_class_SplFileObject_current,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, key,            arginfo_class_SplFileObject_key,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, next,           arginfo_class_SplFileObject_next,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, setFlags,       arginfo_class_SplFileObject_setFlags,      ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, getFlags,       arginfo_class_SplFileObject_getFlags,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, setMaxLineLen,  arginfo_class_SplFileObject_setMaxLineLen, ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, getMaxLineLen,  arginfo_class_SplFileObject_getMaxLineLen,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, hasChildren,    arginfo_class_SplFileObject_hasChildren,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, getChildren,    arginfo_class_SplFileObject_getChildren,          ZEND_ACC_PUBLIC)
+	SPL_ME(SplFileObject, seek,           arginfo_class_SplFileObject_seek,          ZEND_ACC_PUBLIC)
 	/* mappings */
-	SPL_MA(SplFileObject, getCurrentLine, SplFileObject, fgets,      arginfo_splfileinfo_void, ZEND_ACC_PUBLIC)
-	SPL_MA(SplFileObject, __toString,     SplFileObject, fgets,      arginfo_splfileinfo___toString, ZEND_ACC_PUBLIC)
+	SPL_MA(SplFileObject, getCurrentLine, SplFileObject, fgets,      arginfo_class_SplFileObject_getCurrentLine, ZEND_ACC_PUBLIC)
+	SPL_MA(SplFileObject, __toString,     SplFileObject, fgets,      arginfo_class_SplFileObject___toString, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_temp_file_object___construct, 0, 0, 0)
-	ZEND_ARG_INFO(0, max_memory)
-ZEND_END_ARG_INFO()
-
 static const zend_function_entry spl_SplTempFileObject_functions[] = {
-	SPL_ME(SplTempFileObject, __construct, arginfo_temp_file_object___construct,  ZEND_ACC_PUBLIC)
+	SPL_ME(SplTempFileObject, __construct, arginfo_class_SplTempFileObject___construct,  ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 /* }}} */
@@ -3098,7 +2990,6 @@ PHP_MINIT_FUNCTION(spl_directory)
 	spl_filesystem_object_handlers.offset = XtOffsetOf(spl_filesystem_object, std);
 	spl_filesystem_object_handlers.clone_obj = spl_filesystem_object_clone;
 	spl_filesystem_object_handlers.cast_object = spl_filesystem_object_cast;
-	spl_filesystem_object_handlers.get_debug_info  = spl_filesystem_object_get_debug_info;
 	spl_filesystem_object_handlers.dtor_obj = spl_filesystem_object_destroy_object;
 	spl_filesystem_object_handlers.free_obj = spl_filesystem_object_free_storage;
 	spl_ce_SplFileInfo->serialize = zend_class_serialize_deny;

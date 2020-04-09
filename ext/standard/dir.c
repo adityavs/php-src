@@ -23,7 +23,7 @@
 #include "php_string.h"
 #include "php_scandir.h"
 #include "basic_functions.h"
-#include "basic_functions_arginfo.h"
+#include "dir_arginfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -559,7 +559,7 @@ PHP_FUNCTION(scandir)
 	ZEND_PARSE_PARAMETERS_END();
 
 	if (dirn_len < 1) {
-		zend_value_error("Directory name cannot be empty");
+		zend_argument_value_error(1, "cannot be empty");
 		RETURN_THROWS();
 	}
 

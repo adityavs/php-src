@@ -92,19 +92,14 @@ static uint32_t add_static_slot(HashTable     *hash,
                                 int           *cache_size)
 {
 	uint32_t ret;
-	zend_string *key;
-	size_t key_len;
 	zval *class_name = &op_array->literals[op1];
 	zval *prop_name = &op_array->literals[op2];
 	zval *pos, tmp;
 
-	key_len = Z_STRLEN_P(class_name) + sizeof("::") - 1 + Z_STRLEN_P(prop_name);
-	key = zend_string_alloc(key_len, 0);
-	memcpy(ZSTR_VAL(key), Z_STRVAL_P(class_name), Z_STRLEN_P(class_name));
-	memcpy(ZSTR_VAL(key) + Z_STRLEN_P(class_name), "::", sizeof("::") - 1);
-	memcpy(ZSTR_VAL(key) + Z_STRLEN_P(class_name) + sizeof("::") - 1,
-		Z_STRVAL_P(prop_name),
-		Z_STRLEN_P(prop_name) + 1);
+	zend_string *key = zend_string_concat3(
+		Z_STRVAL_P(class_name), Z_STRLEN_P(class_name),
+		"::", sizeof("::") - 1,
+		Z_STRVAL_P(prop_name), Z_STRLEN_P(prop_name));
 
 	ZSTR_H(key) = zend_string_hash_func(key);
 	ZSTR_H(key) += kind;
@@ -132,7 +127,7 @@ void zend_optimizer_compact_literals(zend_op_array *op_array, zend_optimizer_ctx
 	int l_false = -1;
 	int l_true = -1;
 	int l_empty_arr = -1;
-	HashTable hash;
+	HashTable hash, double_hash;
 	zend_string *key = NULL;
 	void *checkpoint = zend_arena_checkpoint(ctx->arena);
 	int *const_slot, *class_slot, *func_slot, *bind_var_slot, *property_slot, *method_slot;
@@ -315,6 +310,8 @@ void zend_optimizer_compact_literals(zend_op_array *op_array, zend_optimizer_ctx
 		/* Merge equal constants */
 		j = 0;
 		zend_hash_init(&hash, op_array->last_literal, NULL, NULL, 0);
+		/* Use separate hashtable for doubles stored as string keys, to avoid collisions. */
+		zend_hash_init(&double_hash, 0, NULL, NULL, 0);
 		map = (int*)zend_arena_alloc(&ctx->arena, op_array->last_literal * sizeof(int));
 		memset(map, 0, op_array->last_literal * sizeof(int));
 		for (i = 0; i < op_array->last_literal; i++) {
@@ -397,12 +394,12 @@ void zend_optimizer_compact_literals(zend_op_array *op_array, zend_optimizer_ctx
 					}
 					break;
 				case IS_DOUBLE:
-					if ((pos = zend_hash_str_find(&hash, (char*)&Z_DVAL(op_array->literals[i]), sizeof(double))) != NULL) {
+					if ((pos = zend_hash_str_find(&double_hash, (char*)&Z_DVAL(op_array->literals[i]), sizeof(double))) != NULL) {
 						map[i] = Z_LVAL_P(pos);
 					} else {
 						map[i] = j;
 						ZVAL_LONG(&zv, j);
-						zend_hash_str_add(&hash, (char*)&Z_DVAL(op_array->literals[i]), sizeof(double), &zv);
+						zend_hash_str_add_new(&double_hash, (char*)&Z_DVAL(op_array->literals[i]), sizeof(double), &zv);
 						if (i != j) {
 							op_array->literals[j] = op_array->literals[i];
 							info[j] = info[i];
@@ -485,7 +482,10 @@ void zend_optimizer_compact_literals(zend_op_array *op_array, zend_optimizer_ctx
 					break;
 			}
 		}
+
+		/* Only clean "hash", as it will be reused in the loop below. */
 		zend_hash_clean(&hash);
+		zend_hash_destroy(&double_hash);
 		op_array->last_literal = j;
 
 		const_slot = zend_arena_alloc(&ctx->arena, j * 6 * sizeof(int));

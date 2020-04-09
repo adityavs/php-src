@@ -1,6 +1,6 @@
 <?php
 
-//TODO: missing arginfo functions defined in C using
+/** @generate-function-entries */
 
 #ifdef HAVE_ORALDAP
 /** @return resource|false */
@@ -13,7 +13,10 @@ function ldap_connect(string $hostname = UNKNOWN, int $port = 389) {}
 /** @param resource $link_identifier */
 function ldap_unbind($link_identifier): bool {}
 
-/** @param resource $link_identifier */
+/**
+ * @param resource $link_identifier
+ * @alias ldap_unbind
+ */
 function ldap_close($link_identifier): bool {}
 
 /** @param resource $link_identifier */
@@ -111,6 +114,7 @@ function ldap_get_values_len($link_identifier, $result_entry_identifier, string 
 /**
  * @param resource $link_identifier
  * @param resource $result_entry_identifier
+ * @alias ldap_get_values_len
  */
 function ldap_get_values($link_identifier, $result_entry_identifier, string $attribute): array|false {}
 
@@ -157,7 +161,10 @@ function ldap_mod_add_ext($link_identifier, string $dn, array $entry, array $ser
 /** @param resource $link_identifier */
 function ldap_mod_replace($link_identifier, string $dn, array $entry, array $servercontrols = []): bool {}
 
-/** @param resource $link_identifier */
+/**
+ * @param resource $link_identifier
+ * @alias ldap_mod_replace
+ */
 function ldap_modify($link_identifier, string $dn, array $entry, array $servercontrols = []): bool {}
 
 /**
@@ -188,12 +195,16 @@ function ldap_compare($link_identifier, string $dn, string $attribute, string $v
 
 
 #ifdef LDAP_CONTROL_PAGEDRESULTS
-/** @param resource $link */
+/**
+ * @param resource $link
+ * @deprecated since 7.4
+ */
 function ldap_control_paged_result($link, int $pagesize, bool $iscritical = false, string $cookie = ''): bool {}
 
 /**
  * @param resource $link
  * @param resource $result
+ * @deprecated since 7.4
  */
 function ldap_control_paged_result_response($link, $result, &$cookie = null, &$estimated = null): bool {}
 #endif

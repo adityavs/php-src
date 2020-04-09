@@ -33,6 +33,7 @@
 #define ZEND_JIT_ON_PROF_REQUEST   2     /* compile the most frequently caled on first request functions */
 #define ZEND_JIT_ON_HOT_COUNTERS   3     /* compile functions after N calls or loop iterations */
 #define ZEND_JIT_ON_DOC_COMMENT    4     /* compile functions with "@jit" tag in doc-comments */
+#define ZEND_JIT_ON_HOT_TRACE      5     /* trace functions after N calls or loop iterations */
 
 #define ZEND_JIT_TRIGGER(n)        (((n) / 10) % 10)
 
@@ -75,6 +76,16 @@
 
 #define ZEND_JIT_DEBUG_GDB       (1<<8)
 
+#define ZEND_JIT_DEBUG_TRACE_START     (1<<12)
+#define ZEND_JIT_DEBUG_TRACE_STOP      (1<<13)
+#define ZEND_JIT_DEBUG_TRACE_COMPILED  (1<<14)
+#define ZEND_JIT_DEBUG_TRACE_EXIT      (1<<15)
+#define ZEND_JIT_DEBUG_TRACE_ABORT     (1<<16)
+#define ZEND_JIT_DEBUG_TRACE_BLACKLIST (1<<17)
+#define ZEND_JIT_DEBUG_TRACE_BYTECODE  (1<<18)
+#define ZEND_JIT_DEBUG_TRACE_TSSA      (1<<19)
+#define ZEND_JIT_DEBUG_TRACE_EXIT_INFO (1<<20)
+
 ZEND_EXT_API int  zend_jit_op_array(zend_op_array *op_array, zend_script *script);
 ZEND_EXT_API int  zend_jit_script(zend_script *script);
 ZEND_EXT_API void zend_jit_unprotect(void);
@@ -94,12 +105,24 @@ struct _zend_life_range {
 	zend_life_range *next;
 };
 
+#define ZREG_FLAGS_SHIFT    8
+
+#define ZREG_STORE          (1<<0)
+#define ZREG_LOAD           (1<<1)
+#define ZREG_LAST_USE       (1<<2)
+#define ZREG_SPLIT          (1<<3)
+
 struct _zend_lifetime_interval {
 	int                     ssa_var;
-	int8_t                  reg;
-	zend_bool               split;
-	zend_bool               store;
-	zend_bool               load;
+	union {
+		struct {
+		ZEND_ENDIAN_LOHI_3(
+			int8_t          reg,
+			uint8_t			flags,
+			uint16_t		reserved
+		)};
+		uint32_t            reg_flags;
+	};
 	zend_life_range         range;
 	zend_lifetime_interval *hint;
 	zend_lifetime_interval *used_as_hint;
